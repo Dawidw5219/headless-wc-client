@@ -9,7 +9,6 @@ import { HWCCartResponse } from "./types/HWCCartResponse";
 export class HeadlessWCCart {
   readonly url: string;
   readonly products: HWCProduct[];
-  readonly total: number;
   readonly subtotal: number;
   readonly taxTotal: number;
   readonly discountTotal: number;
@@ -22,7 +21,6 @@ export class HeadlessWCCart {
   private constructor(props: {
     url: string;
     products: HWCProduct[];
-    total: number;
     subtotal: number;
     taxTotal: number;
     discountTotal: number;
@@ -44,17 +42,27 @@ export class HeadlessWCCart {
     });
   }
 
+  get total(): number {
+    return this.subtotal + this.shippingTotal - this.discountTotal;
+  }
+
   static async create(url: string, items: HWCCartItem[] = []): Promise<HeadlessWCCart> {
     const cart = await HeadlessWCCart.fetchCart(url, items);
-    return new HeadlessWCCart({ url, ...cart });
+    const { total, ...rest } = cart;
+    return new HeadlessWCCart({ url, ...rest });
   }
 
   changeShippingMethod(shippingMethodId: string): HeadlessWCCart {
     const shippingMethod = this.availableShippingMethods.find((item) => item.id === shippingMethodId);
     if (!shippingMethod) throw new Error("Provided shippingMethodId is invalid");
+    console.log("changeShippingMethod");
+    console.log(
+      this.cloneWithUpdates({
+        shippingTotal: shippingMethod.price,
+      })
+    );
     return this.cloneWithUpdates({
       shippingTotal: shippingMethod.price,
-      total: this.subtotal + shippingMethod.price,
     });
   }
 
@@ -68,10 +76,16 @@ export class HeadlessWCCart {
       return product;
     });
     const newSubtotal = this.subtotal + priceDifference;
+    console.log("changeQty");
+    console.log(
+      this.cloneWithUpdates({
+        products: newProducts,
+        subtotal: newSubtotal,
+      })
+    );
     return this.cloneWithUpdates({
       products: newProducts,
       subtotal: newSubtotal,
-      total: newSubtotal + this.shippingTotal,
     });
   }
 
@@ -98,11 +112,15 @@ export class HeadlessWCCart {
     if (this.couponCode == couponCode && couponCode != "") {
       throw new Error("You already using this coupon code");
     }
-    const serverRes = await HeadlessWCCart.fetchCart(this.url, this.cartItems, couponCode);
-    const newCart = new HeadlessWCCart({ url: this.url, ...serverRes });
+    const response = await HeadlessWCCart.fetchCart(this.url, this.cartItems, couponCode);
+    const { total, ...rest } = response;
+    rest.shippingTotal = this.shippingTotal;
+    const newCart = new HeadlessWCCart({ url: this.url, ...rest });
     if (newCart.couponCode !== couponCode) {
       return undefined;
     }
+    console.log("addCouponCode");
+    console.log(newCart);
     return newCart;
   }
 

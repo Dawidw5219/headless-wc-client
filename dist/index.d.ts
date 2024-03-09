@@ -59,7 +59,6 @@ interface HWCShippingMethod {
 declare class HeadlessWCCart {
     readonly url: string;
     readonly products: HWCProduct[];
-    readonly total: number;
     readonly subtotal: number;
     readonly taxTotal: number;
     readonly discountTotal: number;
@@ -70,6 +69,7 @@ declare class HeadlessWCCart {
     readonly availablePaymentMethods: HWCPaymentMethod[];
     private constructor();
     get cartItems(): HWCCartItem[];
+    get total(): number;
     static create(url: string, items?: HWCCartItem[]): Promise<HeadlessWCCart>;
     changeShippingMethod(shippingMethodId: string): HeadlessWCCart;
     changeQty(productId: number, newQuantity: number): HeadlessWCCart;

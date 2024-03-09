@@ -2,7 +2,6 @@
 var HeadlessWCCart = class _HeadlessWCCart {
   url;
   products;
-  total;
   subtotal;
   taxTotal;
   discountTotal;
@@ -22,17 +21,26 @@ var HeadlessWCCart = class _HeadlessWCCart {
       };
     });
   }
+  get total() {
+    return this.subtotal + this.shippingTotal - this.discountTotal;
+  }
   static async create(url, items = []) {
     const cart = await _HeadlessWCCart.fetchCart(url, items);
-    return new _HeadlessWCCart({ url, ...cart });
+    const { total, ...rest } = cart;
+    return new _HeadlessWCCart({ url, ...rest });
   }
   changeShippingMethod(shippingMethodId) {
     const shippingMethod = this.availableShippingMethods.find((item) => item.id === shippingMethodId);
     if (!shippingMethod)
       throw new Error("Provided shippingMethodId is invalid");
+    console.log("changeShippingMethod");
+    console.log(
+      this.cloneWithUpdates({
+        shippingTotal: shippingMethod.price
+      })
+    );
     return this.cloneWithUpdates({
-      shippingTotal: shippingMethod.price,
-      total: this.subtotal + shippingMethod.price
+      shippingTotal: shippingMethod.price
     });
   }
   changeQty(productId, newQuantity) {
@@ -45,10 +53,16 @@ var HeadlessWCCart = class _HeadlessWCCart {
       return product;
     });
     const newSubtotal = this.subtotal + priceDifference;
+    console.log("changeQty");
+    console.log(
+      this.cloneWithUpdates({
+        products: newProducts,
+        subtotal: newSubtotal
+      })
+    );
     return this.cloneWithUpdates({
       products: newProducts,
-      subtotal: newSubtotal,
-      total: newSubtotal + this.shippingTotal
+      subtotal: newSubtotal
     });
   }
   async addProduct(cartItem) {
@@ -72,11 +86,15 @@ var HeadlessWCCart = class _HeadlessWCCart {
     if (this.couponCode == couponCode && couponCode != "") {
       throw new Error("You already using this coupon code");
     }
-    const serverRes = await _HeadlessWCCart.fetchCart(this.url, this.cartItems, couponCode);
-    const newCart = new _HeadlessWCCart({ url: this.url, ...serverRes });
+    const response = await _HeadlessWCCart.fetchCart(this.url, this.cartItems, couponCode);
+    const { total, ...rest } = response;
+    rest.shippingTotal = this.shippingTotal;
+    const newCart = new _HeadlessWCCart({ url: this.url, ...rest });
     if (newCart.couponCode !== couponCode) {
       return void 0;
     }
+    console.log("addCouponCode");
+    console.log(newCart);
     return newCart;
   }
   async removeCouponCode() {
