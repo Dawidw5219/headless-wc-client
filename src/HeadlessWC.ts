@@ -1,5 +1,8 @@
 import { HeadlessWCCart } from "./HeadlessWCCart";
-import { HWCCartItem } from "./types/HWCCartItem";
+import { getProduct } from "./api/getProduct";
+import { getProducts } from "./api/getProducts";
+import { HWCCartItem } from "./types/CartItem";
+import { HWCProductDetailed } from "./types/Product";
 
 export class HeadlessWC {
   private url: string;
@@ -14,6 +17,18 @@ export class HeadlessWC {
       this.cartInstancePromise = HeadlessWCCart.create(this.url, items);
     }
     return this.cartInstancePromise;
+  }
+
+  async getProducts(): Promise<HWCProductDetailed[]> {
+    return await getProducts(this.url);
+  }
+
+  async getProductById(id: number): Promise<HWCProductDetailed> {
+    return await getProduct(this.url, id);
+  }
+
+  async getProductBySlug(slug: string): Promise<HWCProductDetailed> {
+    return await getProduct(this.url, slug);
   }
 }
 

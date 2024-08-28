@@ -1,9 +1,9 @@
-import { HWCProduct } from "./HWCProduct";
-import { HWCPaymentMethod } from "./HWCPaymentMethod";
-import { HWCShippingMethod } from "./HWCShippingMethod";
+import { HWCProductBasic } from "./Product";
+import { HWCPaymentMethod } from "./PaymentMethod";
+import { HWCShippingMethod } from "./ShippingMethod";
 
 export interface HWCCartResponse {
-  products: HWCProduct[];
+  products: HWCProductBasic[];
   subtotal: number;
   total: number;
   taxTotal: number;

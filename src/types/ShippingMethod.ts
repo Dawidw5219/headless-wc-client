@@ -1,4 +1,4 @@
-import { HWCLocation } from "./HWCLocation";
+import { HWCLocation } from "./Location";
 
 export interface HWCShippingMethod {
   name: string;

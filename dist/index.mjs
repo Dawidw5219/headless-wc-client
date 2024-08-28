@@ -160,6 +160,38 @@ var HeadlessWCCart = class _HeadlessWCCart {
   }
 };
 
+// src/api/getProduct.ts
+async function getProduct(url, idOrSlug) {
+  try {
+    const response = await fetch(`${url}/wp-json/headless-wc/v1/products/${idOrSlug}`);
+    if (!response.ok)
+      throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
+    if (data["success"] != true)
+      throw new Error();
+    return data.product;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw error;
+  }
+}
+
+// src/api/getProducts.ts
+async function getProducts(url) {
+  try {
+    const response = await fetch(`${url}/wp-json/headless-wc/v1/products`);
+    if (!response.ok)
+      throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
+    if (data["success"] != true)
+      throw new Error();
+    return data.products;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw error;
+  }
+}
+
 // src/HeadlessWC.ts
 var HeadlessWC = class {
   url;
@@ -172,6 +204,15 @@ var HeadlessWC = class {
       this.cartInstancePromise = HeadlessWCCart.create(this.url, items);
     }
     return this.cartInstancePromise;
+  }
+  async getProducts() {
+    return await getProducts(this.url);
+  }
+  async getProductById(id) {
+    return await getProduct(this.url, id);
+  }
+  async getProductBySlug(slug) {
+    return await getProduct(this.url, slug);
   }
 };
 var HeadlessWC_default = HeadlessWC;

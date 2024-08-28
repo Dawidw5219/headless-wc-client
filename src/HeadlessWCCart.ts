@@ -1,14 +1,14 @@
-import { HWCCartItem } from "./types/HWCCartItem";
-import { HWCCustomerData } from "./types/HWCCustomerData";
-import { HWCOrder } from "./types/HWCOrder";
-import { HWCPaymentMethod } from "./types/HWCPaymentMethod";
-import { HWCProduct } from "./types/HWCProduct";
-import { HWCShippingMethod } from "./types/HWCShippingMethod";
-import { HWCCartResponse } from "./types/HWCCartResponse";
+import { HWCCartItem } from "./types/CartItem";
+import { HWCCustomerData } from "./types/CustomerData";
+import { HWCOrder } from "./types/Order";
+import { HWCPaymentMethod } from "./types/PaymentMethod";
+import { HWCProductBasic } from "./types/Product";
+import { HWCShippingMethod } from "./types/ShippingMethod";
+import { HWCCartResponse } from "./types/CartResponse";
 
 export class HeadlessWCCart {
   readonly url: string;
-  readonly products: HWCProduct[];
+  readonly products: HWCProductBasic[];
   readonly subtotal: number;
   readonly taxTotal: number;
   readonly discountTotal: number;
@@ -20,7 +20,7 @@ export class HeadlessWCCart {
 
   private constructor(props: {
     url: string;
-    products: HWCProduct[];
+    products: HWCProductBasic[];
     subtotal: number;
     taxTotal: number;
     discountTotal: number;

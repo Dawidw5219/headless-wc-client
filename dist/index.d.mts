@@ -28,7 +28,7 @@ interface HWCPaymentMethod {
     description: string;
 }
 
-interface HWCProduct {
+interface HWCProductBasic {
     name: string;
     img: string;
     fullImg: string;
@@ -40,6 +40,18 @@ interface HWCProduct {
     isOnsale: boolean;
     total: number;
     tax: number;
+}
+interface HWCProductDetailed extends HWCProductBasic {
+    permalink: string;
+    slug: string;
+    stockStatus: string;
+    excerpt: string;
+    content: {
+        rendered: string;
+        plain: string;
+    };
+    categories: string[];
+    tags: string[];
 }
 
 interface HWCLocation {
@@ -58,7 +70,7 @@ interface HWCShippingMethod {
 
 declare class HeadlessWCCart {
     readonly url: string;
-    readonly products: HWCProduct[];
+    readonly products: HWCProductBasic[];
     readonly subtotal: number;
     readonly taxTotal: number;
     readonly discountTotal: number;
@@ -95,6 +107,9 @@ declare class HeadlessWC {
     private cartInstancePromise;
     constructor(url: string);
     createCart(items?: HWCCartItem[]): Promise<HeadlessWCCart>;
+    getProducts(): Promise<HWCProductDetailed[]>;
+    getProductById(id: number): Promise<HWCProductDetailed>;
+    getProductBySlug(slug: string): Promise<HWCProductDetailed>;
 }
 
-export { HeadlessWC, HeadlessWCCart };
+export { type HWCProductBasic, type HWCProductDetailed, HeadlessWC, HeadlessWCCart };
