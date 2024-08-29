@@ -1,16 +1,38 @@
 # Headless WooCommerce Client
 
+https://www.npmjs.com/package/axios
+
 Client for Headless WooCommerce Wordpress Plugin
 
-## Dev env
+## Installation
 
-1. Run
-   yarn dev
+1. Install [HeadlessWC: Ultimate eCommerce Decoupler](https://wordpress.org/plugins/headless-wc/) WordPress plugin on your site
+2. Install this package
 
-## Local Setup
+```sh
+npm install headless-wc-client
+```
 
-1. Run inside this project folder
-   npm link
+3. Done!
 
-2. To use this package inside diffrents projects localy you use
-   npm link headless-wc-client
+## Examples
+
+1. Geting all WooCommerce products in React
+
+```js
+const headlessWC = new HeadlessWC("https://example-wc-site.com");
+const products = await headlessWC.getProducts();
+return (
+  <>
+    {products.map((product) => (
+      <div>
+        <img src={product.fullImg} alt="" />
+        <h3>Name: {product.name}</h3>
+        <p>Price: {product.price}</p>
+        <h4>Description:</h4>
+        <div dangerouslySetInnerHTML={{ __html: product.content.rendered }} />
+      </div>
+    ))}
+  </>
+);
+```

@@ -1,7 +1,7 @@
 {
   "name": "headless-wc-client",
-  "version": "1.0.0",
-  "description": "WooCommerce Headless Solution",
+  "version": "1.0.2",
+  "description": "WooCommerce Headless Solution ",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -18,9 +18,10 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "git": "git add . && git commit -m 'update' && git push origin main",
+    "deploy": "npm run build && npm publish && npm run git"
   },
-  "repository": "git+https://github.com/Dawidw5219/headless-woocommerce-client.git",
+  "repository": "git+https://github.com/Dawidw5219/headless-wc-client.git",
   "keywords": [
     "woocommerce",
     "wordpress",
@@ -34,9 +35,9 @@
   "author": "Dawid Wiewiórski",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Dawidw5219/headless-woocommerce-client/issues"
+    "url": "https://github.com/Dawidw5219/headless-wc-client/issues"
   },
-  "homepage": "https://github.com/Dawidw5219/headless-woocommerce-client#readme",
+  "homepage": "https://github.com/Dawidw5219/headless-wc-client#readme",
   "devDependencies": {
     "tsup": "^8.0.2",
     "typedoc": "^0.25.9",

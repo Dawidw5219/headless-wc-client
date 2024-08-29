@@ -46,6 +46,19 @@ interface HWCProductDetailed extends HWCProductBasic {
     slug: string;
     stockStatus: string;
     excerpt: string;
+    fullImg: string;
+    images: {
+        thumbnail: string;
+        medium: string;
+        medium_large: string;
+        large: string;
+        woocommerce_thumbnail: string;
+        woocommerce_single: string;
+        woocommerce_gallery_thumbnail: string;
+        full: string;
+        thumbnailLQIP: string;
+        [key: string]: string;
+    };
     content: {
         rendered: string;
         plain: string;
