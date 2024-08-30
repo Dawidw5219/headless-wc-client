@@ -2,7 +2,7 @@ export interface HWCProductBasic {
   name: string;
   img: string;
   fullImg: string;
-  images: {
+  image: {
     thumbnail: string;
     medium: string;
     medium_large: string;

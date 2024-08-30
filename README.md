@@ -1,7 +1,5 @@
 # Headless WooCommerce Client
 
-https://www.npmjs.com/package/axios
-
 Client for Headless WooCommerce Wordpress Plugin
 
 ## Installation
