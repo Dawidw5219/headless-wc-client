@@ -1,7 +1,7 @@
 {
   "name": "headless-wc-client",
   "version": "1.0.3",
-  "description": "WooCommerce Headless Solution ",
+  "description": "WooCommerce Headless Solution",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -21,7 +21,10 @@
     "git": "git add . && git commit -m 'update' && git push origin main",
     "deploy": "npm run build && npm publish && npm run git"
   },
-  "repository": "git+https://github.com/Dawidw5219/headless-wc-client.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dawidw5219/headless-wc-client.git"
+  },
   "keywords": [
     "woocommerce",
     "wordpress",
