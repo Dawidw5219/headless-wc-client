@@ -1,14 +1,14 @@
-import { HWCCartItem } from "./types/CartItem";
-import { HWCCustomerData } from "./types/CustomerData";
-import { HWCOrder } from "./types/Order";
-import { HWCPaymentMethod } from "./types/PaymentMethod";
-import { HWCProductBasic } from "./types/Product";
-import { HWCShippingMethod } from "./types/ShippingMethod";
-import { HWCCartResponse } from "./types/CartResponse";
+import { HWCCartItem } from "../types/CartItem";
+import { HWCCustomerData } from "../types/CustomerData";
+import { HWCOrder } from "../types/Order";
+import { HWCPaymentMethod } from "../types/PaymentMethod";
+import { HWCProductType } from "../types/Product";
+import { HWCShippingMethod } from "../types/ShippingMethod";
+import { HWCCartResponse } from "../types/CartResponse";
 
-export class HeadlessWCCart {
+export class HCCart {
   readonly url: string;
-  readonly products: HWCProductBasic[];
+  readonly products: HWCProductType[];
   readonly subtotal: number;
   readonly taxTotal: number;
   readonly discountTotal: number;
@@ -20,7 +20,7 @@ export class HeadlessWCCart {
 
   private constructor(props: {
     url: string;
-    products: HWCProductBasic[];
+    products: HWCProductType[];
     subtotal: number;
     taxTotal: number;
     discountTotal: number;
@@ -46,13 +46,13 @@ export class HeadlessWCCart {
     return this.subtotal + this.shippingTotal - this.discountTotal;
   }
 
-  static async create(url: string, items: HWCCartItem[] = []): Promise<HeadlessWCCart> {
-    const cart = await HeadlessWCCart.fetchCart(url, items);
+  static async create(url: string, items: HWCCartItem[] = []): Promise<HCCart> {
+    const cart = await HCCart.fetchCart(url, items);
     const { total, ...rest } = cart;
-    return new HeadlessWCCart({ url, ...rest });
+    return new HCCart({ url, ...rest });
   }
 
-  changeShippingMethod(shippingMethodId: string): HeadlessWCCart {
+  changeShippingMethod(shippingMethodId: string): HCCart {
     const shippingMethod = this.availableShippingMethods.find((item) => item.id === shippingMethodId);
     if (!shippingMethod) throw new Error("Provided shippingMethodId is invalid");
     console.log("changeShippingMethod");
@@ -66,7 +66,7 @@ export class HeadlessWCCart {
     });
   }
 
-  changeQty(productId: number, newQuantity: number): HeadlessWCCart {
+  changeQty(productId: number, newQuantity: number): HCCart {
     let priceDifference = 0;
     const newProducts = this.products.map((product) => {
       if (product.id === productId) {
@@ -89,33 +89,33 @@ export class HeadlessWCCart {
     });
   }
 
-  async addProduct(cartItem: HWCCartItem): Promise<HeadlessWCCart> {
+  async addProduct(cartItem: HWCCartItem): Promise<HCCart> {
     const existingCartItem = this.cartItems.find((item) => item.id === cartItem.id);
     if (existingCartItem) {
       return this.changeQty(cartItem.id, cartItem.quantity + existingCartItem.quantity);
     }
     const newCartItems = [...this.cartItems, cartItem];
-    const serverRes = await HeadlessWCCart.fetchCart(this.url, newCartItems);
-    return new HeadlessWCCart({ url: this.url, ...serverRes });
+    const serverRes = await HCCart.fetchCart(this.url, newCartItems);
+    return new HCCart({ url: this.url, ...serverRes });
   }
 
-  async removeProduct(productId: number): Promise<HeadlessWCCart> {
+  async removeProduct(productId: number): Promise<HCCart> {
     const newCartItems = this.cartItems.filter((item) => item.id !== productId);
     if (newCartItems.length === this.cartItems.length) {
       return this;
     }
-    const serverRes = await HeadlessWCCart.fetchCart(this.url, newCartItems);
-    return new HeadlessWCCart({ url: this.url, ...serverRes });
+    const serverRes = await HCCart.fetchCart(this.url, newCartItems);
+    return new HCCart({ url: this.url, ...serverRes });
   }
 
-  async addCouponCode(couponCode: string): Promise<HeadlessWCCart | undefined> {
+  async addCouponCode(couponCode: string): Promise<HCCart | undefined> {
     if (this.couponCode == couponCode && couponCode != "") {
       throw new Error("You already using this coupon code");
     }
-    const response = await HeadlessWCCart.fetchCart(this.url, this.cartItems, couponCode);
+    const response = await HCCart.fetchCart(this.url, this.cartItems, couponCode);
     const { total, ...rest } = response;
     rest.shippingTotal = this.shippingTotal;
-    const newCart = new HeadlessWCCart({ url: this.url, ...rest });
+    const newCart = new HCCart({ url: this.url, ...rest });
     if (newCart.couponCode !== couponCode) {
       return undefined;
     }
@@ -124,8 +124,8 @@ export class HeadlessWCCart {
     return newCart;
   }
 
-  async removeCouponCode(): Promise<HeadlessWCCart> {
-    return (await this.addCouponCode("")) as HeadlessWCCart;
+  async removeCouponCode(): Promise<HCCart> {
+    return (await this.addCouponCode("")) as HCCart;
   }
 
   async submitOrder(props: {
@@ -173,8 +173,8 @@ export class HeadlessWCCart {
     }
   }
 
-  private cloneWithUpdates(updates: Partial<HeadlessWCCart>): HeadlessWCCart {
-    return new HeadlessWCCart({ ...this, ...updates });
+  private cloneWithUpdates(updates: Partial<HCCart>): HCCart {
+    return new HCCart({ ...this, ...updates });
   }
 
   private static async fetchCart(

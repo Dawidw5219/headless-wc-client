@@ -14,3 +14,7 @@ Client for Headless WooCommerce Wordpress Plugin
 
 2. To use this package inside diffrents projects localy you use
    npm link headless-wc-client
+
+## TO DO
+
+- Try: https://www.npmjs.com/package/grunt-release?activeTab=readme
