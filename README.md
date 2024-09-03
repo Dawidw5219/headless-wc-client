@@ -24,11 +24,11 @@ return (
   <>
     {products.map((product) => (
       <div>
-        <img src={product.fullImg} alt="" />
+        <img src={product.image.full} alt="" />
         <h3>Name: {product.name}</h3>
         <p>Price: {product.price}</p>
-        <h4>Description:</h4>
-        <div dangerouslySetInnerHTML={{ __html: product.content.rendered }} />
+        <h4>Short description:</h4>
+        <div dangerouslySetInnerHTML={{ __html: product.short_description.rendered }} />
       </div>
     ))}
   </>
