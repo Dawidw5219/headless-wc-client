@@ -1,4 +1,4 @@
-export interface HWCCustomerData {
+export type HWCCustomerData = {
   firstName: string;
   lastName: string;
   address1: string;
@@ -9,4 +9,4 @@ export interface HWCCustomerData {
   country: string;
   phone: string;
   email: string;
-}
+};

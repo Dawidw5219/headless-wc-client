@@ -1,10 +1,11 @@
-import { HWCLocation } from "./Location";
-
-export interface HWCShippingMethod {
+export type HWCShippingMethod = {
   name: string;
   id: string;
   price: number;
   tax: number;
   zone: string;
-  locations: HWCLocation[];
-}
+  locations: {
+    type: string;
+    code: string;
+  }[];
+};

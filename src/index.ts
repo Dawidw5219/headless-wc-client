@@ -1,5 +1,10 @@
-export { default as HeadlessWC } from "./HeadlessWC";
-export { HCCart as HeadlessWCCart } from "./classes/Cart";
-export { HWCProductType, HWCProductDetailed } from "./types/Product";
-export { HWCAttribute } from "./types/Attribute";
-export { HWCProduct } from "./classes/Product";
+import { HeadlessWC } from "./HeadlessWC";
+import { HWCCart } from "./classes/Cart";
+import { HWCProduct } from "./types/Product";
+import { HWCProductDetailed } from "./types/ProductDetailed";
+import { HWCAttribute } from "./types/Attribute";
+import { HWCCartProduct } from "./types/CartProduct";
+
+export { HeadlessWC, HWCCart, HWCProduct, HWCProductDetailed, HWCAttribute, HWCCartProduct };
+
+export default HeadlessWC;
