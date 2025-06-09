@@ -86,9 +86,7 @@ async function createOrder(url, props) {
       })
     );
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    console.log(res);
     const json = await res.json();
-    console.log(json);
     if (json["success"] != true) throw new Error();
     return json;
   } catch (error) {

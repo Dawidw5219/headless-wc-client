@@ -53,10 +53,7 @@ export async function createOrder(
     );
 
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    console.log(res);
-
     const json = await res.json();
-    console.log(json);
 
     if (json["success"] != true) throw new Error();
     return json as HWCOrder;
