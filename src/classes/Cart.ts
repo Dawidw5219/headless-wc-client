@@ -6,31 +6,23 @@ import { HWCShippingMethod } from "../types/ShippingMethod";
 import { createCart } from "../api/createCart";
 import { createOrder } from "../api/createOrder";
 import { HWCProductDetailed } from "../types/ProductDetailed";
+import { HWCCartType } from "../types/Cart";
 
-export class HWCCart {
+export class HWCCart implements HWCCartType {
+  total: number;
   readonly url: string;
   readonly products: HWCCartProduct[];
   readonly subtotal: number;
-  readonly tax_total: number;
-  readonly discount_total: number;
-  readonly shipping_total: number;
-  readonly coupon_code: string;
+  readonly taxTotal: number;
+  readonly discountTotal: number;
+  readonly shippingTotal: number;
+  readonly couponCode: string;
   readonly currency: string;
-  readonly shipping_methods: HWCShippingMethod[];
-  readonly payment_methods: HWCPaymentMethod[];
+  readonly shippingMethods: HWCShippingMethod[];
+  readonly paymentMethods: HWCPaymentMethod[];
+  readonly customFields?: { [key: string]: any };
 
-  private constructor(props: {
-    url: string;
-    products: HWCCartProduct[];
-    subtotal: number;
-    tax_total: number;
-    discount_total: number;
-    shipping_total: number;
-    coupon_code: string;
-    currency: string;
-    shipping_methods: HWCShippingMethod[];
-    payment_methods: HWCPaymentMethod[];
-  }) {
+  private constructor(props: HWCCartType & { url: string }) {
     Object.assign(this, props);
   }
 
@@ -43,47 +35,90 @@ export class HWCCart {
     });
   }
 
-  get total(): string {
-    return (this.subtotal + this.shipping_total - this.discount_total).toFixed(2);
+  private cloneWithUpdates(updates: Partial<HWCCart>): HWCCart {
+    const updatedCart = new HWCCart({ ...this, ...updates });
+    updatedCart.total =
+      updatedCart.subtotal +
+      updatedCart.shippingTotal -
+      updatedCart.discountTotal;
+    return updatedCart;
   }
 
-  static async create(url: string, cartItems: { id: number; quantity: number }[] = []): Promise<HWCCart> {
-    const cart = await createCart(url, cartItems);
+  static async create(
+    url: string,
+    cartItems: (
+      | { id: number; quantity: number }
+      | { slug: string; quantity: number }
+    )[] = [],
+    customFields?: { [key: string]: any }
+  ): Promise<HWCCart> {
+    const cart = await createCart(url, cartItems, "", customFields);
     const { total, ...rest } = cart;
-    return new HWCCart({ url, ...rest });
+    return new HWCCart({ ...cart, url });
   }
 
   async revalidateWithServer(): Promise<HWCCart> {
-    const fetchCart = await createCart(this.url, this.cartItems);
+    const fetchCart = await createCart(
+      this.url,
+      this.cartItems,
+      this.couponCode,
+      this.customFields
+    );
     return new HWCCart({ url: this.url, ...fetchCart });
   }
 
   changeShippingMethod(shippingMethodId: string): HWCCart {
-    const shippingMethod = this.shipping_methods.find((item) => item.id === shippingMethodId);
-    if (!shippingMethod) throw new Error("Provided shippingMethodId is invalid");
+    const shippingMethod = this.shippingMethods.find(
+      (item) => item.id === shippingMethodId
+    );
+    if (!shippingMethod)
+      throw new Error("Provided shippingMethodId is invalid");
     return this.cloneWithUpdates({
-      shipping_total: shippingMethod.price,
+      shippingTotal: shippingMethod.price,
     });
   }
 
   changeQty(productId: number, newQuantity: number): HWCCart {
-    let priceDifference = 0;
-    const newProducts = this.products.map((product) => {
+    // Find the product to update
+    const updatedProducts = this.products.map((product) => {
       if (product.id === productId) {
-        priceDifference = newQuantity * product.price - product.total;
-        return { ...product, quantity: newQuantity, total: newQuantity * product.price };
+        // Calculate the new total for the product
+        const newTotal = parseFloat((newQuantity * product.price).toFixed(2));
+        // Return the updated product
+        return { ...product, quantity: newQuantity, total: newTotal };
       }
       return product;
     });
-    const newSubtotal = this.subtotal + priceDifference;
+
+    // Calculate the price difference
+    const priceDifference = updatedProducts.reduce((acc, product) => {
+      const originalProduct = this.products.find((p) => p.id === product.id);
+      if (originalProduct) {
+        return acc + (product.total - originalProduct.total);
+      }
+      return acc;
+    }, 0);
+
+    // Ensure subtotal is a number and calculate the new subtotal
+    const currentSubtotal =
+      typeof this.subtotal === "number"
+        ? this.subtotal
+        : parseFloat(this.subtotal);
+    const newSubtotal = parseFloat(
+      (currentSubtotal + priceDifference).toFixed(2)
+    );
+
+    // Return a new cart instance with updated products and subtotal
     return this.cloneWithUpdates({
-      products: newProducts,
+      products: updatedProducts,
       subtotal: newSubtotal,
     });
   }
 
   addProduct(product: HWCProductDetailed): HWCCart {
-    const existingCartItem = this.cartItems.find((cartItem) => cartItem.id === product.id);
+    const existingCartItem = this.cartItems.find(
+      (cartItem) => cartItem.id === product.id
+    );
     if (existingCartItem) {
       return this.changeQty(product.id, 1 + existingCartItem.quantity);
     }
@@ -92,20 +127,47 @@ export class HWCCart {
       tax: 0,
       variation: null,
       total: product.price,
-      variation_id: "variation_id" in product ? product.variation_id : null,
+      variationId: "variationId" in product ? product.variationId : null,
       ...product,
     };
     return this.cloneWithUpdates({
       products: [...this.products, cartProduct],
+      subtotal: this.subtotal + product.price,
     });
   }
 
-  async addProductById(cartItem: { id: number; quantity: number }): Promise<HWCCart> {
-    const existingCartItem = this.cartItems.find((item) => item.id === cartItem.id);
+  async addProductById(cartItem: {
+    id: number;
+    quantity: number;
+  }): Promise<HWCCart> {
+    const existingCartItem = this.cartItems.find(
+      (item) => item.id === cartItem.id
+    );
     if (existingCartItem) {
-      return this.changeQty(cartItem.id, cartItem.quantity + existingCartItem.quantity);
+      return this.changeQty(
+        cartItem.id,
+        cartItem.quantity + existingCartItem.quantity
+      );
     }
-    const fetchCart = await createCart(this.url, [...this.cartItems, cartItem]);
+    const fetchCart = await createCart(
+      this.url,
+      [...this.cartItems, cartItem],
+      this.couponCode,
+      this.customFields
+    );
+    return new HWCCart({ url: this.url, ...fetchCart });
+  }
+
+  async addProductBySlug(cartItem: {
+    slug: string;
+    quantity: number;
+  }): Promise<HWCCart> {
+    const fetchCart = await createCart(
+      this.url,
+      [...this.cartItems, cartItem],
+      this.couponCode,
+      this.customFields
+    );
     return new HWCCart({ url: this.url, ...fetchCart });
   }
 
@@ -121,21 +183,29 @@ export class HWCCart {
     if (newCartItems.length === this.cartItems.length) {
       return this;
     }
-    const fetchCart = await createCart(this.url, newCartItems);
-    const { total, ...rest } = fetchCart;
-    return new HWCCart({ url: this.url, ...rest });
+    const fetchCart = await createCart(
+      this.url,
+      newCartItems,
+      this.couponCode,
+      this.customFields
+    );
+    // const { total, ...rest } = fetchCart;
+    return new HWCCart({ url: this.url, ...fetchCart });
   }
 
   async addCouponCode(couponCode: string): Promise<HWCCart | undefined> {
-    if (this.coupon_code == couponCode && couponCode != "") {
+    if (this.couponCode == couponCode && couponCode != "") {
       throw new Error("You already using this coupon code");
     }
-    const fetchCart = await createCart(this.url, this.cartItems, couponCode);
-    const { total, ...rest } = fetchCart;
-    rest.shipping_total = this.shipping_total;
-    rest.discount_total = this.discount_total;
-    const newCart = new HWCCart({ url: this.url, ...rest });
-    if (newCart.coupon_code !== couponCode) {
+    const fetchCart = await createCart(
+      this.url,
+      this.cartItems,
+      couponCode,
+      this.customFields
+    );
+    //const { total, ...rest } = fetchCart;
+    const newCart = new HWCCart({ url: this.url, ...fetchCart });
+    if (newCart.couponCode !== couponCode) {
       return undefined;
     }
     return newCart;
@@ -143,6 +213,22 @@ export class HWCCart {
 
   async removeCouponCode(): Promise<HWCCart> {
     return (await this.addCouponCode("")) as HWCCart;
+  }
+
+  async updateCustomFields(customFields: {
+    [key: string]: any;
+  }): Promise<HWCCart> {
+    const mergedCustomFields = {
+      ...this.customFields,
+      ...customFields,
+    };
+    const fetchCart = await createCart(
+      this.url,
+      this.cartItems,
+      this.couponCode,
+      mergedCustomFields
+    );
+    return new HWCCart({ url: this.url, ...fetchCart });
   }
 
   async submitOrder(props: {
@@ -153,11 +239,19 @@ export class HWCCart {
     redirectURL?: string;
     furgonetkaPoint?: string;
     furgonetkaPointName?: string;
+    customFields?: { [key: string]: any };
   }): Promise<HWCOrder> {
-    return await createOrder(props);
-  }
+    // Merge customFields from cart with customFields from props
+    const mergedCustomFields = {
+      ...this.customFields,
+      ...props.customFields,
+    };
 
-  private cloneWithUpdates(updates: Partial<HWCCart>): HWCCart {
-    return new HWCCart({ ...this, ...updates });
+    return await createOrder(this.url, {
+      cartItems: this.cartItems,
+      couponCode: this.couponCode,
+      ...props,
+      customFields: mergedCustomFields,
+    });
   }
 }

@@ -41,31 +41,31 @@ type HWCProductBase = {
     permalink: string;
     currency: string;
     price: number;
-    regular_price: number;
-    sale_price?: number;
+    regularPrice: number;
+    salePrice?: number;
     image: HWCImage;
 };
 type HWCSimpleProduct = HWCProductBase & {
     type: "simple" | "grouped" | "external";
-    is_on_sale: boolean;
-    is_virtual: boolean;
-    is_featured: boolean;
-    is_sold_individually: boolean;
-    stock_quantity?: number;
-    stock_status: "onbackorder" | "instock" | "outofstock";
+    isOnSale: boolean;
+    isVirtual: boolean;
+    isFeatured: boolean;
+    isSoldIndividually: boolean;
+    stockQuantity?: number;
+    stockStatus: "onbackorder" | "instock" | "outofstock";
     attributes: HWCAttribute[];
     categories: string[];
     tags: string[];
-    sale_start_datetime?: string;
-    sale_end_datetime?: string;
+    saleStartDatetime?: string;
+    saleEndDatetime?: string;
     sku?: string;
-    global_unique_id?: string;
-    short_description?: {
+    globalUniqueId?: string;
+    shortDescription?: {
         rendered: string;
         plain: string;
     };
 };
-type HWCVariation = Omit<HWCSimpleProduct, "type" | "short_description"> & {
+type HWCVariation = Omit<HWCSimpleProduct, "type" | "shortDescription"> & {
     type: "variation";
     content?: {
         rendered: string;
@@ -74,10 +74,10 @@ type HWCVariation = Omit<HWCSimpleProduct, "type" | "short_description"> & {
 };
 type HWCVariableProduct = Omit<HWCSimpleProduct, "type"> & {
     type: "variable";
-    variations_min_price: number;
-    variations_max_price: number;
+    variationsMinPrice: number;
+    variationsMaxPrice: number;
     variations: {
-        attribute_values: {
+        attributeValues: {
             [key: string]: string;
         };
         variation: HWCVariation;
@@ -86,7 +86,7 @@ type HWCVariableProduct = Omit<HWCSimpleProduct, "type"> & {
 type HWCProduct = HWCSimpleProduct | HWCVariableProduct;
 
 type HWCCartProduct = HWCProductBase & {
-    variation_id: number | null;
+    variationId: number | null;
     variation: {
         [key: string]: string;
     } | null;
@@ -98,8 +98,9 @@ type HWCCartProduct = HWCProductBase & {
 type HWCCustomerData = {
     firstName: string;
     lastName: string;
+    company?: string;
     address1: string;
-    address2: string;
+    address2?: string;
     city: string;
     state: string;
     postcode: string;
@@ -134,14 +135,14 @@ type HWCShippingMethod = {
 
 type HWCSimpleProductDetailed = HWCSimpleProduct & {
     type: "simple" | "grouped" | "external";
-    weight_unit: string;
-    dimension_unit: string;
+    weightUnit: string;
+    dimensionUnit: string;
     height?: number;
     length?: number;
     weight?: number;
     width?: number;
-    gallery_images: HWCImage[];
-    upsell_ids: number[];
+    galleryImages: HWCImage[];
+    upsellIds: number[];
     content?: {
         rendered: string;
         plain: string;
@@ -149,12 +150,12 @@ type HWCSimpleProductDetailed = HWCSimpleProduct & {
 };
 type HWCVariableProductDetailed = Omit<HWCSimpleProductDetailed, "type"> & {
     type: "variable";
-    variation_id: number | null;
+    variationId: number | null;
     variation: null;
-    variations_min_price: number;
-    variations_max_price: number;
+    variationsMinPrice: number;
+    variationsMaxPrice: number;
     variations: {
-        attribute_values: {
+        attributeValues: {
             [key: string]: string;
         };
         variation: HWCVariation;
@@ -162,24 +163,49 @@ type HWCVariableProductDetailed = Omit<HWCSimpleProductDetailed, "type"> & {
 };
 type HWCProductDetailed = HWCSimpleProductDetailed | HWCVariableProductDetailed;
 
-declare class HWCCart {
+type HWCCartType = {
+    products: HWCCartProduct[];
+    total: number;
+    subtotal: number;
+    taxTotal: number;
+    discountTotal: number;
+    shippingTotal: number;
+    couponCode: string;
+    currency: string;
+    shippingMethods: HWCShippingMethod[];
+    paymentMethods: HWCPaymentMethod[];
+    customFields?: {
+        [key: string]: any;
+    };
+};
+
+declare class HWCCart implements HWCCartType {
+    total: number;
     readonly url: string;
     readonly products: HWCCartProduct[];
     readonly subtotal: number;
-    readonly tax_total: number;
-    readonly discount_total: number;
-    readonly shipping_total: number;
-    readonly coupon_code: string;
+    readonly taxTotal: number;
+    readonly discountTotal: number;
+    readonly shippingTotal: number;
+    readonly couponCode: string;
     readonly currency: string;
-    readonly shipping_methods: HWCShippingMethod[];
-    readonly payment_methods: HWCPaymentMethod[];
+    readonly shippingMethods: HWCShippingMethod[];
+    readonly paymentMethods: HWCPaymentMethod[];
+    readonly customFields?: {
+        [key: string]: any;
+    };
     private constructor();
     private get cartItems();
-    get total(): string;
-    static create(url: string, cartItems?: {
+    private cloneWithUpdates;
+    static create(url: string, cartItems?: ({
         id: number;
         quantity: number;
-    }[]): Promise<HWCCart>;
+    } | {
+        slug: string;
+        quantity: number;
+    })[], customFields?: {
+        [key: string]: any;
+    }): Promise<HWCCart>;
     revalidateWithServer(): Promise<HWCCart>;
     changeShippingMethod(shippingMethodId: string): HWCCart;
     changeQty(productId: number, newQuantity: number): HWCCart;
@@ -188,10 +214,17 @@ declare class HWCCart {
         id: number;
         quantity: number;
     }): Promise<HWCCart>;
+    addProductBySlug(cartItem: {
+        slug: string;
+        quantity: number;
+    }): Promise<HWCCart>;
     removeProduct(product: HWCProductDetailed): HWCCart;
     removeProductById(productId: number): Promise<HWCCart>;
     addCouponCode(couponCode: string): Promise<HWCCart | undefined>;
     removeCouponCode(): Promise<HWCCart>;
+    updateCustomFields(customFields: {
+        [key: string]: any;
+    }): Promise<HWCCart>;
     submitOrder(props: {
         billingData: HWCCustomerData;
         shippingData?: HWCCustomerData;
@@ -200,21 +233,77 @@ declare class HWCCart {
         redirectURL?: string;
         furgonetkaPoint?: string;
         furgonetkaPointName?: string;
+        customFields?: {
+            [key: string]: any;
+        };
     }): Promise<HWCOrder>;
-    private cloneWithUpdates;
 }
+
+type HWCOrderItem = {
+    id: number;
+    name: string;
+    quantity: number;
+    price: number;
+    unit_price: number;
+    sku: string;
+    image: string;
+};
+type HWCAddress = {
+    first_name: string;
+    last_name: string;
+    company: string;
+    address_1: string;
+    address_2: string;
+    city: string;
+    state: string;
+    postcode: string;
+    country: string;
+    email?: string;
+    phone?: string;
+};
+type HWCOrderDetails = {
+    success: boolean;
+    order: {
+        id: number;
+        order_key: string;
+        status: string;
+        currency: string;
+        date_created: string;
+        date_modified: string;
+        payment_method: string;
+        payment_method_title: string;
+        total: number;
+        subtotal: number;
+        total_tax: number;
+        shipping_total: number;
+        discount_total: number;
+        items: HWCOrderItem[];
+        billing: HWCAddress;
+        shipping: HWCAddress;
+        customer_note: string;
+        custom_fields: {
+            [key: string]: any;
+        };
+    };
+};
 
 declare class HeadlessWC {
     private url;
     private cartInstancePromise;
     constructor(url: string);
-    createCart(items?: {
+    createCart(items?: ({
         id: number;
         quantity: number;
-    }[]): Promise<HWCCart>;
+    } | {
+        slug: string;
+        quantity: number;
+    })[], customFields?: {
+        [key: string]: any;
+    }): Promise<HWCCart>;
     getProducts(): Promise<HWCProduct[]>;
     getProductById(id: number): Promise<HWCProductDetailed>;
     getProductBySlug(slug: string): Promise<HWCProductDetailed>;
+    getOrderDetails(orderId: number, orderKey: string): Promise<HWCOrderDetails>;
     static selectProductVariation(product: HWCProductDetailed, attributeValues: {
         [key: string]: string;
     }): HWCProductDetailed;
@@ -223,4 +312,4 @@ declare class HeadlessWC {
     }): HWCProductDetailed;
 }
 
-export { type HWCAttribute, HWCCart, type HWCCartProduct, type HWCProduct, type HWCProductDetailed, HeadlessWC, HeadlessWC as default };
+export { type HWCAddress, type HWCAttribute, HWCCart, type HWCCartProduct, type HWCCustomerData, type HWCOrder, type HWCOrderDetails, type HWCOrderItem, type HWCProduct, type HWCProductDetailed, HeadlessWC, HeadlessWC as default };

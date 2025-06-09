@@ -3,14 +3,14 @@ import { HWCProductBase, HWCSimpleProduct, HWCVariation } from "./Product";
 
 type HWCSimpleProductDetailed = HWCSimpleProduct & {
   type: "simple" | "grouped" | "external";
-  weight_unit: string;
-  dimension_unit: string;
+  weightUnit: string;
+  dimensionUnit: string;
   height?: number;
   length?: number;
   weight?: number;
   width?: number;
-  gallery_images: HWCImage[];
-  upsell_ids: number[];
+  galleryImages: HWCImage[];
+  upsellIds: number[];
   content?: {
     rendered: string;
     plain: string;
@@ -19,12 +19,12 @@ type HWCSimpleProductDetailed = HWCSimpleProduct & {
 
 type HWCVariableProductDetailed = Omit<HWCSimpleProductDetailed, "type"> & {
   type: "variable";
-  variation_id: number | null;
+  variationId: number | null;
   variation: null;
-  variations_min_price: number;
-  variations_max_price: number;
+  variationsMinPrice: number;
+  variationsMaxPrice: number;
   variations: {
-    attribute_values: { [key: string]: string };
+    attributeValues: { [key: string]: string };
     variation: HWCVariation;
   }[];
 };

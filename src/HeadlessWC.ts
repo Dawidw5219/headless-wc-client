@@ -1,8 +1,10 @@
 import { HWCCart as HWCCart } from "./classes/Cart";
 import { HWCProduct } from "./types/Product";
 import { HWCProductDetailed } from "./types/ProductDetailed";
+import { HWCOrderDetails } from "./types/OrderDetails";
 import { getProduct } from "./api/getProduct";
 import { getProducts } from "./api/getProducts";
+import { getOrderDetails } from "./api/getOrderDetails";
 
 export class HeadlessWC {
   private url: string;
@@ -12,9 +14,15 @@ export class HeadlessWC {
     this.url = url;
   }
 
-  async createCart(items: { id: number; quantity: number }[] = []): Promise<HWCCart> {
+  async createCart(
+    items: (
+      | { id: number; quantity: number }
+      | { slug: string; quantity: number }
+    )[] = [],
+    customFields?: { [key: string]: any }
+  ): Promise<HWCCart> {
     if (!this.cartInstancePromise) {
-      this.cartInstancePromise = HWCCart.create(this.url, items);
+      this.cartInstancePromise = HWCCart.create(this.url, items, customFields);
     }
     return this.cartInstancePromise;
   }
@@ -31,6 +39,13 @@ export class HeadlessWC {
     return await getProduct(this.url, slug);
   }
 
+  async getOrderDetails(
+    orderId: number,
+    orderKey: string
+  ): Promise<HWCOrderDetails> {
+    return await getOrderDetails(this.url, orderId, orderKey);
+  }
+
   static selectProductVariation(
     product: HWCProductDetailed,
     attributeValues: { [key: string]: string }
@@ -44,33 +59,36 @@ export class HeadlessWC {
     product: HWCProductDetailed | HWCProductDetailed,
     attributeValues: { [key: string]: string }
   ): HWCProductDetailed | HWCProductDetailed {
-    if (product.type !== "variable") throw new Error("Cannot select variation for non-variable product");
+    if (product.type !== "variable")
+      throw new Error("Cannot select variation for non-variable product");
     const variation = product.variations!.find((variation) =>
-      Object.entries(attributeValues).every(([key, value]) => variation.attribute_values[key] === value)
+      Object.entries(attributeValues).every(
+        ([key, value]) => variation.attributeValues[key] === value
+      )
     )?.variation;
     if (!variation) return product;
 
     return {
       ...product,
-      is_on_sale: variation.is_on_sale,
-      is_virtual: variation.is_virtual,
-      is_featured: variation.is_featured,
-      is_sold_individually: variation.is_sold_individually,
+      isOnSale: variation.isOnSale,
+      isVirtual: variation.isVirtual,
+      isFeatured: variation.isFeatured,
+      isSoldIndividually: variation.isSoldIndividually,
       image: variation.image,
       id: variation.id,
       name: variation.name,
-      stock_quantity: variation.stock_quantity,
-      stock_status: variation.stock_status,
+      stockQuantity: variation.stockQuantity,
+      stockStatus: variation.stockStatus,
       slug: variation.slug,
       permalink: variation.permalink,
       currency: variation.currency,
       price: variation.price,
-      regular_price: variation.regular_price,
-      sale_price: variation.sale_price,
-      sale_start_datetime: variation.sale_start_datetime,
-      sale_end_datetime: variation.sale_end_datetime,
+      regularPrice: variation.regularPrice,
+      salePrice: variation.salePrice,
+      saleStartDatetime: variation.saleStartDatetime,
+      saleEndDatetime: variation.saleEndDatetime,
       sku: variation.sku,
-      global_unique_id: variation.global_unique_id,
+      globalUniqueId: variation.globalUniqueId,
       content: variation.content,
     };
   }

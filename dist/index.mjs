@@ -1,11 +1,11 @@
 // src/api/createCart.ts
-async function createCart(url, products, couponCode = "") {
+async function createCart(url, products, couponCode = "", customFields) {
   try {
     const res = await fetch(`${url}/wp-json/headless-wc/v1/cart`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       cache: "no-cache",
-      body: JSON.stringify({ cart: products, couponCode })
+      body: JSON.stringify({ cart: products, couponCode, customFields })
     });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
@@ -18,55 +18,64 @@ async function createCart(url, products, couponCode = "") {
 }
 
 // src/api/createOrder.ts
-async function createOrder(props) {
+async function createOrder(url, props) {
   try {
-    const res = await fetch(`${this.url}/wp-json/headless-wc/v1/order`, {
+    const isDevEnv = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+    const res = await fetch(`${url}/wp-json/headless-wc/v1/order`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      cache: "no-cache",
+      cache: isDevEnv ? "no-store" : "default",
       body: JSON.stringify({
-        cart: this.cartItems,
-        coupon_code: this.coupon_code,
-        // total: this.total,
-        shipping_method_id: props.shippingMethodId,
-        payment_method_id: props.paymentMethodId,
-        redirect_url: props.redirectURL ?? "",
-        use_different_shipping: false,
-        billing_first_name: props.billingData.firstName,
-        billing_last_name: props.billingData.lastName,
-        billing_address_1: props.billingData.address1,
-        billing_address_2: props.billingData.address2 ?? "",
-        billing_city: props.billingData.city,
-        billing_state: props.billingData.state,
-        billing_postcode: props.billingData.postcode,
-        billing_country: props.billingData.country,
-        billing_phone: props.billingData.phone,
-        billing_email: props.billingData.email,
+        cart: props.cartItems,
+        couponCode: props.couponCode ?? "",
+        shippingMethodId: props.shippingMethodId,
+        paymentMethodId: props.paymentMethodId,
+        redirectUrl: props.redirectURL ?? "",
+        useDifferentShipping: false,
+        billingFirstName: props.billingData.firstName,
+        billingLastName: props.billingData.lastName,
+        billingAddress1: props.billingData.address1,
+        billingAddress2: props.billingData.address2 ?? "",
+        billingCity: props.billingData.city,
+        billingState: props.billingData.state,
+        billingPostcode: props.billingData.postcode,
+        billingCountry: props.billingData.country,
+        billingPhone: props.billingData.phone,
+        billingEmail: props.billingData.email,
+        billingCompany: props.billingData.company,
         furgonetkaPoint: props.furgonetkaPoint,
-        furgonetkaPointName: props.furgonetkaPointName
+        furgonetkaPointName: props.furgonetkaPointName,
+        customFields: props.customFields
       })
     });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    console.log(res);
     const json = await res.json();
+    console.log(json);
     if (json["success"] != true) throw new Error();
     return json;
   } catch (error) {
-    throw new Error("Invalid response from WooCommerce Server. Couldn't create an order");
+    console.error(error);
+    throw new Error(
+      "Invalid response from WooCommerce Server. Couldn't create an order"
+    );
   }
 }
 
 // src/classes/Cart.ts
 var HWCCart = class _HWCCart {
+  total;
   url;
   products;
   subtotal;
-  tax_total;
-  discount_total;
-  shipping_total;
-  coupon_code;
+  taxTotal;
+  discountTotal;
+  shippingTotal;
+  couponCode;
   currency;
-  shipping_methods;
-  payment_methods;
+  shippingMethods;
+  paymentMethods;
+  customFields;
   constructor(props) {
     Object.assign(this, props);
   }
@@ -78,42 +87,63 @@ var HWCCart = class _HWCCart {
       };
     });
   }
-  get total() {
-    return (this.subtotal + this.shipping_total - this.discount_total).toFixed(2);
+  cloneWithUpdates(updates) {
+    const updatedCart = new _HWCCart({ ...this, ...updates });
+    updatedCart.total = updatedCart.subtotal + updatedCart.shippingTotal - updatedCart.discountTotal;
+    return updatedCart;
   }
-  static async create(url, cartItems = []) {
-    const cart = await createCart(url, cartItems);
+  static async create(url, cartItems = [], customFields) {
+    const cart = await createCart(url, cartItems, "", customFields);
     const { total, ...rest } = cart;
-    return new _HWCCart({ url, ...rest });
+    return new _HWCCart({ ...cart, url });
   }
   async revalidateWithServer() {
-    const fetchCart = await createCart(this.url, this.cartItems);
+    const fetchCart = await createCart(
+      this.url,
+      this.cartItems,
+      this.couponCode,
+      this.customFields
+    );
     return new _HWCCart({ url: this.url, ...fetchCart });
   }
   changeShippingMethod(shippingMethodId) {
-    const shippingMethod = this.shipping_methods.find((item) => item.id === shippingMethodId);
-    if (!shippingMethod) throw new Error("Provided shippingMethodId is invalid");
+    const shippingMethod = this.shippingMethods.find(
+      (item) => item.id === shippingMethodId
+    );
+    if (!shippingMethod)
+      throw new Error("Provided shippingMethodId is invalid");
     return this.cloneWithUpdates({
-      shipping_total: shippingMethod.price
+      shippingTotal: shippingMethod.price
     });
   }
   changeQty(productId, newQuantity) {
-    let priceDifference = 0;
-    const newProducts = this.products.map((product) => {
+    const updatedProducts = this.products.map((product) => {
       if (product.id === productId) {
-        priceDifference = newQuantity * product.price - product.total;
-        return { ...product, quantity: newQuantity, total: newQuantity * product.price };
+        const newTotal = parseFloat((newQuantity * product.price).toFixed(2));
+        return { ...product, quantity: newQuantity, total: newTotal };
       }
       return product;
     });
-    const newSubtotal = this.subtotal + priceDifference;
+    const priceDifference = updatedProducts.reduce((acc, product) => {
+      const originalProduct = this.products.find((p) => p.id === product.id);
+      if (originalProduct) {
+        return acc + (product.total - originalProduct.total);
+      }
+      return acc;
+    }, 0);
+    const currentSubtotal = typeof this.subtotal === "number" ? this.subtotal : parseFloat(this.subtotal);
+    const newSubtotal = parseFloat(
+      (currentSubtotal + priceDifference).toFixed(2)
+    );
     return this.cloneWithUpdates({
-      products: newProducts,
+      products: updatedProducts,
       subtotal: newSubtotal
     });
   }
   addProduct(product) {
-    const existingCartItem = this.cartItems.find((cartItem) => cartItem.id === product.id);
+    const existingCartItem = this.cartItems.find(
+      (cartItem) => cartItem.id === product.id
+    );
     if (existingCartItem) {
       return this.changeQty(product.id, 1 + existingCartItem.quantity);
     }
@@ -122,19 +152,39 @@ var HWCCart = class _HWCCart {
       tax: 0,
       variation: null,
       total: product.price,
-      variation_id: "variation_id" in product ? product.variation_id : null,
+      variationId: "variationId" in product ? product.variationId : null,
       ...product
     };
     return this.cloneWithUpdates({
-      products: [...this.products, cartProduct]
+      products: [...this.products, cartProduct],
+      subtotal: this.subtotal + product.price
     });
   }
   async addProductById(cartItem) {
-    const existingCartItem = this.cartItems.find((item) => item.id === cartItem.id);
+    const existingCartItem = this.cartItems.find(
+      (item) => item.id === cartItem.id
+    );
     if (existingCartItem) {
-      return this.changeQty(cartItem.id, cartItem.quantity + existingCartItem.quantity);
+      return this.changeQty(
+        cartItem.id,
+        cartItem.quantity + existingCartItem.quantity
+      );
     }
-    const fetchCart = await createCart(this.url, [...this.cartItems, cartItem]);
+    const fetchCart = await createCart(
+      this.url,
+      [...this.cartItems, cartItem],
+      this.couponCode,
+      this.customFields
+    );
+    return new _HWCCart({ url: this.url, ...fetchCart });
+  }
+  async addProductBySlug(cartItem) {
+    const fetchCart = await createCart(
+      this.url,
+      [...this.cartItems, cartItem],
+      this.couponCode,
+      this.customFields
+    );
     return new _HWCCart({ url: this.url, ...fetchCart });
   }
   removeProduct(product) {
@@ -148,20 +198,26 @@ var HWCCart = class _HWCCart {
     if (newCartItems.length === this.cartItems.length) {
       return this;
     }
-    const fetchCart = await createCart(this.url, newCartItems);
-    const { total, ...rest } = fetchCart;
-    return new _HWCCart({ url: this.url, ...rest });
+    const fetchCart = await createCart(
+      this.url,
+      newCartItems,
+      this.couponCode,
+      this.customFields
+    );
+    return new _HWCCart({ url: this.url, ...fetchCart });
   }
   async addCouponCode(couponCode) {
-    if (this.coupon_code == couponCode && couponCode != "") {
+    if (this.couponCode == couponCode && couponCode != "") {
       throw new Error("You already using this coupon code");
     }
-    const fetchCart = await createCart(this.url, this.cartItems, couponCode);
-    const { total, ...rest } = fetchCart;
-    rest.shipping_total = this.shipping_total;
-    rest.discount_total = this.discount_total;
-    const newCart = new _HWCCart({ url: this.url, ...rest });
-    if (newCart.coupon_code !== couponCode) {
+    const fetchCart = await createCart(
+      this.url,
+      this.cartItems,
+      couponCode,
+      this.customFields
+    );
+    const newCart = new _HWCCart({ url: this.url, ...fetchCart });
+    if (newCart.couponCode !== couponCode) {
       return void 0;
     }
     return newCart;
@@ -169,11 +225,30 @@ var HWCCart = class _HWCCart {
   async removeCouponCode() {
     return await this.addCouponCode("");
   }
-  async submitOrder(props) {
-    return await createOrder(props);
+  async updateCustomFields(customFields) {
+    const mergedCustomFields = {
+      ...this.customFields,
+      ...customFields
+    };
+    const fetchCart = await createCart(
+      this.url,
+      this.cartItems,
+      this.couponCode,
+      mergedCustomFields
+    );
+    return new _HWCCart({ url: this.url, ...fetchCart });
   }
-  cloneWithUpdates(updates) {
-    return new _HWCCart({ ...this, ...updates });
+  async submitOrder(props) {
+    const mergedCustomFields = {
+      ...this.customFields,
+      ...props.customFields
+    };
+    return await createOrder(this.url, {
+      cartItems: this.cartItems,
+      couponCode: this.couponCode,
+      ...props,
+      customFields: mergedCustomFields
+    });
   }
 };
 
@@ -211,6 +286,38 @@ async function getProducts(url) {
   }
 }
 
+// src/api/getOrderDetails.ts
+async function getOrderDetails(url, orderId, orderKey) {
+  try {
+    const isDevEnv = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+    const res = await fetch(
+      `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
+        orderKey
+      )}`,
+      {
+        cache: isDevEnv ? "no-store" : "default"
+      }
+    );
+    if (!res.ok) {
+      if (res.status === 400) {
+        throw new Error("Bad request - Missing order ID or order key");
+      } else if (res.status === 403) {
+        throw new Error("Forbidden - Invalid order key");
+      } else if (res.status === 404) {
+        throw new Error("Not found - Order does not exist");
+      }
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const json = await res.json();
+    if (json["success"] !== true)
+      throw new Error("Invalid response from server");
+    return json;
+  } catch (error) {
+    console.error("Error fetching order details:", error);
+    throw error;
+  }
+}
+
 // src/HeadlessWC.ts
 var HeadlessWC = class {
   url;
@@ -218,9 +325,9 @@ var HeadlessWC = class {
   constructor(url) {
     this.url = url;
   }
-  async createCart(items = []) {
+  async createCart(items = [], customFields) {
     if (!this.cartInstancePromise) {
-      this.cartInstancePromise = HWCCart.create(this.url, items);
+      this.cartInstancePromise = HWCCart.create(this.url, items, customFields);
     }
     return this.cartInstancePromise;
   }
@@ -233,34 +340,40 @@ var HeadlessWC = class {
   async getProductBySlug(slug) {
     return await getProduct(this.url, slug);
   }
+  async getOrderDetails(orderId, orderKey) {
+    return await getOrderDetails(this.url, orderId, orderKey);
+  }
   static selectProductVariation(product, attributeValues) {
     var _a;
-    if (product.type !== "variable") throw new Error("Cannot select variation for non-variable product");
+    if (product.type !== "variable")
+      throw new Error("Cannot select variation for non-variable product");
     const variation = (_a = product.variations.find(
-      (variation2) => Object.entries(attributeValues).every(([key, value]) => variation2.attribute_values[key] === value)
+      (variation2) => Object.entries(attributeValues).every(
+        ([key, value]) => variation2.attributeValues[key] === value
+      )
     )) == null ? void 0 : _a.variation;
     if (!variation) return product;
     return {
       ...product,
-      is_on_sale: variation.is_on_sale,
-      is_virtual: variation.is_virtual,
-      is_featured: variation.is_featured,
-      is_sold_individually: variation.is_sold_individually,
+      isOnSale: variation.isOnSale,
+      isVirtual: variation.isVirtual,
+      isFeatured: variation.isFeatured,
+      isSoldIndividually: variation.isSoldIndividually,
       image: variation.image,
       id: variation.id,
       name: variation.name,
-      stock_quantity: variation.stock_quantity,
-      stock_status: variation.stock_status,
+      stockQuantity: variation.stockQuantity,
+      stockStatus: variation.stockStatus,
       slug: variation.slug,
       permalink: variation.permalink,
       currency: variation.currency,
       price: variation.price,
-      regular_price: variation.regular_price,
-      sale_price: variation.sale_price,
-      sale_start_datetime: variation.sale_start_datetime,
-      sale_end_datetime: variation.sale_end_datetime,
+      regularPrice: variation.regularPrice,
+      salePrice: variation.salePrice,
+      saleStartDatetime: variation.saleStartDatetime,
+      saleEndDatetime: variation.saleEndDatetime,
       sku: variation.sku,
-      global_unique_id: variation.global_unique_id,
+      globalUniqueId: variation.globalUniqueId,
       content: variation.content
     };
   }
