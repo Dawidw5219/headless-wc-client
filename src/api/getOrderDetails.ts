@@ -1,4 +1,5 @@
 import { HWCOrderDetails } from "../types/OrderDetails";
+import { fetchWithRetry, getRetryFetchOptions } from "../utils/fetchWithRetry";
 
 export async function getOrderDetails(
   url: string,
@@ -6,15 +7,11 @@ export async function getOrderDetails(
   orderKey: string
 ): Promise<HWCOrderDetails> {
   try {
-    const isDevEnv =
-      process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-    const res = await fetch(
+    const res = await fetchWithRetry(
       `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
         orderKey
       )}`,
-      {
-        cache: isDevEnv ? "no-store" : "default",
-      }
+      getRetryFetchOptions()
     );
 
     if (!res.ok) {

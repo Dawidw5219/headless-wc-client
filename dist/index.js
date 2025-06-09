@@ -25,15 +25,51 @@ __export(src_exports, {
 });
 module.exports = __toCommonJS(src_exports);
 
+// src/utils/fetchWithRetry.ts
+async function fetchWithRetry(url, options = {}) {
+  const { retries = 3, retryDelay = 500, ...fetchOptions } = options;
+  let lastError;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, fetchOptions);
+      if (response.ok || attempt === retries) {
+        return response;
+      }
+      lastError = new Error(`HTTP error! status: ${response.status}`);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt === retries) {
+        throw lastError;
+      }
+    }
+    if (attempt < retries) {
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
+  }
+  throw lastError;
+}
+function getRetryFetchOptions(customOptions = {}) {
+  const isDevEnv = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+  return {
+    cache: isDevEnv ? "no-store" : "default",
+    retries: 3,
+    retryDelay: 500,
+    ...customOptions
+  };
+}
+
 // src/api/createCart.ts
 async function createCart(url, products, couponCode = "", customFields) {
   try {
-    const res = await fetch(`${url}/wp-json/headless-wc/v1/cart`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-cache",
-      body: JSON.stringify({ cart: products, couponCode, customFields })
-    });
+    const res = await fetchWithRetry(
+      `${url}/wp-json/headless-wc/v1/cart`,
+      getRetryFetchOptions({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-cache",
+        body: JSON.stringify({ cart: products, couponCode, customFields })
+      })
+    );
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
     if (json["success"] != true) throw new Error();
@@ -47,34 +83,35 @@ async function createCart(url, products, couponCode = "", customFields) {
 // src/api/createOrder.ts
 async function createOrder(url, props) {
   try {
-    const isDevEnv = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-    const res = await fetch(`${url}/wp-json/headless-wc/v1/order`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      cache: isDevEnv ? "no-store" : "default",
-      body: JSON.stringify({
-        cart: props.cartItems,
-        couponCode: props.couponCode ?? "",
-        shippingMethodId: props.shippingMethodId,
-        paymentMethodId: props.paymentMethodId,
-        redirectUrl: props.redirectURL ?? "",
-        useDifferentShipping: false,
-        billingFirstName: props.billingData.firstName,
-        billingLastName: props.billingData.lastName,
-        billingAddress1: props.billingData.address1,
-        billingAddress2: props.billingData.address2 ?? "",
-        billingCity: props.billingData.city,
-        billingState: props.billingData.state,
-        billingPostcode: props.billingData.postcode,
-        billingCountry: props.billingData.country,
-        billingPhone: props.billingData.phone,
-        billingEmail: props.billingData.email,
-        billingCompany: props.billingData.company,
-        furgonetkaPoint: props.furgonetkaPoint,
-        furgonetkaPointName: props.furgonetkaPointName,
-        customFields: props.customFields
+    const res = await fetchWithRetry(
+      `${url}/wp-json/headless-wc/v1/order`,
+      getRetryFetchOptions({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cart: props.cartItems,
+          couponCode: props.couponCode ?? "",
+          shippingMethodId: props.shippingMethodId,
+          paymentMethodId: props.paymentMethodId,
+          redirectUrl: props.redirectURL ?? "",
+          useDifferentShipping: false,
+          billingFirstName: props.billingData.firstName,
+          billingLastName: props.billingData.lastName,
+          billingAddress1: props.billingData.address1,
+          billingAddress2: props.billingData.address2 ?? "",
+          billingCity: props.billingData.city,
+          billingState: props.billingData.state,
+          billingPostcode: props.billingData.postcode,
+          billingCountry: props.billingData.country,
+          billingPhone: props.billingData.phone,
+          billingEmail: props.billingData.email,
+          billingCompany: props.billingData.company,
+          furgonetkaPoint: props.furgonetkaPoint,
+          furgonetkaPointName: props.furgonetkaPointName,
+          customFields: props.customFields
+        })
       })
-    });
+    );
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     console.log(res);
     const json = await res.json();
@@ -282,10 +319,10 @@ var HWCCart = class _HWCCart {
 // src/api/getProduct.ts
 async function getProduct(url, idOrSlug) {
   try {
-    const isDevEnv = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-    const res = await fetch(`${url}/wp-json/headless-wc/v1/products/${idOrSlug}`, {
-      cache: isDevEnv ? "no-store" : "default"
-    });
+    const res = await fetchWithRetry(
+      `${url}/wp-json/headless-wc/v1/products/${idOrSlug}`,
+      getRetryFetchOptions()
+    );
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
     if (json["success"] != true) throw new Error();
@@ -299,10 +336,10 @@ async function getProduct(url, idOrSlug) {
 // src/api/getProducts.ts
 async function getProducts(url) {
   try {
-    const isDevEnv = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-    const res = await fetch(`${url}/wp-json/headless-wc/v1/products`, {
-      cache: isDevEnv ? "no-store" : "default"
-    });
+    const res = await fetchWithRetry(
+      `${url}/wp-json/headless-wc/v1/products`,
+      getRetryFetchOptions()
+    );
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
     if (json["success"] != true) throw new Error();
@@ -316,14 +353,11 @@ async function getProducts(url) {
 // src/api/getOrderDetails.ts
 async function getOrderDetails(url, orderId, orderKey) {
   try {
-    const isDevEnv = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-    const res = await fetch(
+    const res = await fetchWithRetry(
       `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
         orderKey
       )}`,
-      {
-        cache: isDevEnv ? "no-store" : "default"
-      }
+      getRetryFetchOptions()
     );
     if (!res.ok) {
       if (res.status === 400) {

@@ -1,11 +1,15 @@
 import { HWCProductDetailed } from "../types/ProductDetailed";
+import { fetchWithRetry, getRetryFetchOptions } from "../utils/fetchWithRetry";
 
-export async function getProduct(url: string, idOrSlug: number | string): Promise<HWCProductDetailed> {
+export async function getProduct(
+  url: string,
+  idOrSlug: number | string
+): Promise<HWCProductDetailed> {
   try {
-    const isDevEnv = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-    const res = await fetch(`${url}/wp-json/headless-wc/v1/products/${idOrSlug}`, {
-      cache: isDevEnv ? "no-store" : "default",
-    });
+    const res = await fetchWithRetry(
+      `${url}/wp-json/headless-wc/v1/products/${idOrSlug}`,
+      getRetryFetchOptions()
+    );
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
     if (json["success"] != true) throw new Error();

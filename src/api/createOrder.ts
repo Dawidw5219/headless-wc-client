@@ -1,5 +1,6 @@
 import { HWCCustomerData } from "../types/CustomerData";
 import { HWCOrder } from "../types/Order";
+import { fetchWithRetry, getRetryFetchOptions } from "../utils/fetchWithRetry";
 
 // Typ pozwalający na określanie produktu przez id lub slug
 export async function createOrder(
@@ -21,35 +22,35 @@ export async function createOrder(
   }
 ): Promise<HWCOrder> {
   try {
-    const isDevEnv =
-      process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-    const res = await fetch(`${url}/wp-json/headless-wc/v1/order`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      cache: isDevEnv ? "no-store" : "default",
-      body: JSON.stringify({
-        cart: props.cartItems,
-        couponCode: props.couponCode ?? "",
-        shippingMethodId: props.shippingMethodId,
-        paymentMethodId: props.paymentMethodId,
-        redirectUrl: props.redirectURL ?? "",
-        useDifferentShipping: false,
-        billingFirstName: props.billingData.firstName,
-        billingLastName: props.billingData.lastName,
-        billingAddress1: props.billingData.address1,
-        billingAddress2: props.billingData.address2 ?? "",
-        billingCity: props.billingData.city,
-        billingState: props.billingData.state,
-        billingPostcode: props.billingData.postcode,
-        billingCountry: props.billingData.country,
-        billingPhone: props.billingData.phone,
-        billingEmail: props.billingData.email,
-        billingCompany: props.billingData.company,
-        furgonetkaPoint: props.furgonetkaPoint,
-        furgonetkaPointName: props.furgonetkaPointName,
-        customFields: props.customFields,
-      }),
-    });
+    const res = await fetchWithRetry(
+      `${url}/wp-json/headless-wc/v1/order`,
+      getRetryFetchOptions({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cart: props.cartItems,
+          couponCode: props.couponCode ?? "",
+          shippingMethodId: props.shippingMethodId,
+          paymentMethodId: props.paymentMethodId,
+          redirectUrl: props.redirectURL ?? "",
+          useDifferentShipping: false,
+          billingFirstName: props.billingData.firstName,
+          billingLastName: props.billingData.lastName,
+          billingAddress1: props.billingData.address1,
+          billingAddress2: props.billingData.address2 ?? "",
+          billingCity: props.billingData.city,
+          billingState: props.billingData.state,
+          billingPostcode: props.billingData.postcode,
+          billingCountry: props.billingData.country,
+          billingPhone: props.billingData.phone,
+          billingEmail: props.billingData.email,
+          billingCompany: props.billingData.company,
+          furgonetkaPoint: props.furgonetkaPoint,
+          furgonetkaPointName: props.furgonetkaPointName,
+          customFields: props.customFields,
+        }),
+      })
+    );
 
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     console.log(res);
