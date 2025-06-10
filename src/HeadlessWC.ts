@@ -57,8 +57,8 @@ export class HeadlessWC {
     props: {
       billingData: HWCCustomerData;
       shippingData?: HWCCustomerData;
-      shippingMethodId: string;
-      paymentMethodId: string;
+      shippingMethodId?: string;
+      paymentMethodId?: string;
       redirectURL?: string;
       couponCode?: string;
       customFields?: { [key: string]: any };
