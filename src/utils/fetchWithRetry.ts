@@ -1,3 +1,5 @@
+const APP_NAME = "HeadlessWC";
+
 export interface BetterFetchOptions extends RequestInit {
   retries?: number;
   retryDelay?: number;
@@ -58,58 +60,72 @@ export async function betterFetch(
         responseText = "[Could not read response body]";
       }
 
-      const errorDetails = {
-        url,
-        method: fetchOptions.method || "GET",
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        responseBody: responseJson || responseText,
-        attempt,
-        maxRetries: retries,
-      };
-
-      // Log detailed error info in dev environment
-      if (isDev) {
-        console.error("🚨 HTTP Request Failed:", errorDetails);
-      }
-
       // Create error with basic info
       lastError = new Error(`HTTP error! status: ${response.status}`);
+
+      // If it's the last attempt, log comprehensive error details
+      if (attempt === retries && isDev) {
+        console.error(
+          `[${APP_NAME}] 🚨 Request failed after ${retries} attempts:`,
+          {
+            url,
+            method: fetchOptions.method || "GET",
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+            responseBody: responseJson || responseText,
+            totalAttempts: retries,
+          }
+        );
+      }
 
       // If it's the last attempt, return the response (let the caller handle the error)
       if (attempt === retries) {
         return response;
       }
+
+      // Log retry info for non-final attempts
+      if (isDev && attempt < retries) {
+        console.warn(
+          `[${APP_NAME}] ⏳ HTTP ${
+            response.status
+          } - Retrying in ${retryDelay}ms (attempt ${attempt + 1}/${retries})`
+        );
+      }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
-      // Log network/fetch errors in dev environment
-      if (isDev) {
-        console.error("🚨 Network/Fetch Error:", {
-          url,
-          method: fetchOptions.method || "GET",
-          error: lastError.message,
-          attempt,
-          maxRetries: retries,
-        });
+      // If it's the last attempt, log comprehensive network error
+      if (attempt === retries && isDev) {
+        console.error(
+          `[${APP_NAME}] 🚨 Network error after ${retries} attempts:`,
+          {
+            url,
+            method: fetchOptions.method || "GET",
+            error: lastError.message,
+            errorType: lastError.constructor.name,
+            totalAttempts: retries,
+          }
+        );
       }
 
       // If it's the last attempt, throw the error
       if (attempt === retries) {
         throw lastError;
       }
-    }
 
-    // Wait before retrying (except on the last attempt)
-    if (attempt < retries) {
-      if (isDev) {
+      // Log retry info for non-final attempts
+      if (isDev && attempt < retries) {
         console.warn(
-          `⏳ Retrying request in ${retryDelay}ms... (attempt ${
+          `[${APP_NAME}] ⏳ Network error - Retrying in ${retryDelay}ms (attempt ${
             attempt + 1
           }/${retries})`
         );
       }
+    }
+
+    // Wait before retrying (except on the last attempt)
+    if (attempt < retries) {
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }
   }

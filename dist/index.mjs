@@ -1,4 +1,5 @@
 // src/utils/fetchWithRetry.ts
+var APP_NAME = "HeadlessWC";
 function isDevEnvironment() {
   return process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
 }
@@ -28,44 +29,53 @@ async function betterFetch(url, options = {}) {
       } catch {
         responseText = "[Could not read response body]";
       }
-      const errorDetails = {
-        url,
-        method: fetchOptions.method || "GET",
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        responseBody: responseJson || responseText,
-        attempt,
-        maxRetries: retries
-      };
-      if (isDev) {
-        console.error("\u{1F6A8} HTTP Request Failed:", errorDetails);
-      }
       lastError = new Error(`HTTP error! status: ${response.status}`);
+      if (attempt === retries && isDev) {
+        console.error(
+          `[${APP_NAME}] \u{1F6A8} Request failed after ${retries} attempts:`,
+          {
+            url,
+            method: fetchOptions.method || "GET",
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+            responseBody: responseJson || responseText,
+            totalAttempts: retries
+          }
+        );
+      }
       if (attempt === retries) {
         return response;
       }
+      if (isDev && attempt < retries) {
+        console.warn(
+          `[${APP_NAME}] \u23F3 HTTP ${response.status} - Retrying in ${retryDelay}ms (attempt ${attempt + 1}/${retries})`
+        );
+      }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      if (isDev) {
-        console.error("\u{1F6A8} Network/Fetch Error:", {
-          url,
-          method: fetchOptions.method || "GET",
-          error: lastError.message,
-          attempt,
-          maxRetries: retries
-        });
+      if (attempt === retries && isDev) {
+        console.error(
+          `[${APP_NAME}] \u{1F6A8} Network error after ${retries} attempts:`,
+          {
+            url,
+            method: fetchOptions.method || "GET",
+            error: lastError.message,
+            errorType: lastError.constructor.name,
+            totalAttempts: retries
+          }
+        );
       }
       if (attempt === retries) {
         throw lastError;
       }
-    }
-    if (attempt < retries) {
-      if (isDev) {
+      if (isDev && attempt < retries) {
         console.warn(
-          `\u23F3 Retrying request in ${retryDelay}ms... (attempt ${attempt + 1}/${retries})`
+          `[${APP_NAME}] \u23F3 Network error - Retrying in ${retryDelay}ms (attempt ${attempt + 1}/${retries})`
         );
       }
+    }
+    if (attempt < retries) {
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }
   }
