@@ -304,6 +304,25 @@ declare class HeadlessWC {
     getProductById(id: number): Promise<HWCProductDetailed>;
     getProductBySlug(slug: string): Promise<HWCProductDetailed>;
     getOrderDetails(orderId: number, orderKey: string): Promise<HWCOrderDetails>;
+    createOrder(items: ({
+        id: number;
+        quantity: number;
+    } | {
+        slug: string;
+        quantity: number;
+    })[], props: {
+        billingData: HWCCustomerData;
+        shippingData?: HWCCustomerData;
+        shippingMethodId: string;
+        paymentMethodId: string;
+        redirectURL?: string;
+        couponCode?: string;
+        furgonetkaPoint?: string;
+        furgonetkaPointName?: string;
+        customFields?: {
+            [key: string]: any;
+        };
+    }): Promise<HWCOrder>;
     static selectProductVariation(product: HWCProductDetailed, attributeValues: {
         [key: string]: string;
     }): HWCProductDetailed;

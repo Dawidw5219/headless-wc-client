@@ -402,6 +402,12 @@ var HeadlessWC = class {
   async getOrderDetails(orderId, orderKey) {
     return await getOrderDetails(this.url, orderId, orderKey);
   }
+  async createOrder(items, props) {
+    return await createOrder(this.url, {
+      cartItems: items,
+      ...props
+    });
+  }
   static selectProductVariation(product, attributeValues) {
     var _a;
     if (product.type !== "variable")

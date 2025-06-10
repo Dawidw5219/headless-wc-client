@@ -2,9 +2,12 @@ import { HWCCart as HWCCart } from "./classes/Cart";
 import { HWCProduct } from "./types/Product";
 import { HWCProductDetailed } from "./types/ProductDetailed";
 import { HWCOrderDetails } from "./types/OrderDetails";
+import { HWCCustomerData } from "./types/CustomerData";
+import { HWCOrder } from "./types/Order";
 import { getProduct } from "./api/getProduct";
 import { getProducts } from "./api/getProducts";
 import { getOrderDetails } from "./api/getOrderDetails";
+import { createOrder } from "./api/createOrder";
 
 export class HeadlessWC {
   private url: string;
@@ -44,6 +47,29 @@ export class HeadlessWC {
     orderKey: string
   ): Promise<HWCOrderDetails> {
     return await getOrderDetails(this.url, orderId, orderKey);
+  }
+
+  async createOrder(
+    items: (
+      | { id: number; quantity: number }
+      | { slug: string; quantity: number }
+    )[],
+    props: {
+      billingData: HWCCustomerData;
+      shippingData?: HWCCustomerData;
+      shippingMethodId: string;
+      paymentMethodId: string;
+      redirectURL?: string;
+      couponCode?: string;
+      furgonetkaPoint?: string;
+      furgonetkaPointName?: string;
+      customFields?: { [key: string]: any };
+    }
+  ): Promise<HWCOrder> {
+    return await createOrder(this.url, {
+      cartItems: items,
+      ...props,
+    });
   }
 
   static selectProductVariation(
