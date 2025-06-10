@@ -1,11 +1,11 @@
 import { HWCProduct } from "../types/Product";
-import { fetchWithRetry, getRetryFetchOptions } from "../utils/fetchWithRetry";
+import { betterFetch, getBetterFetchOptions } from "../utils/fetchWithRetry";
 
 export async function getProducts(url: string): Promise<HWCProduct[]> {
   try {
-    const res = await fetchWithRetry(
+    const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/products`,
-      getRetryFetchOptions()
+      getBetterFetchOptions()
     );
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();

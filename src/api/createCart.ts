@@ -1,5 +1,5 @@
 import { HWCCartType } from "../types/Cart";
-import { fetchWithRetry, getRetryFetchOptions } from "../utils/fetchWithRetry";
+import { betterFetch, getBetterFetchOptions } from "../utils/fetchWithRetry";
 
 export async function createCart(
   url: string,
@@ -11,9 +11,9 @@ export async function createCart(
   customFields?: { [key: string]: any }
 ): Promise<HWCCartType> {
   try {
-    const res = await fetchWithRetry(
+    const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/cart`,
-      getRetryFetchOptions({
+      getBetterFetchOptions({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-cache",

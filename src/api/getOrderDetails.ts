@@ -1,5 +1,5 @@
 import { HWCOrderDetails } from "../types/OrderDetails";
-import { fetchWithRetry, getRetryFetchOptions } from "../utils/fetchWithRetry";
+import { betterFetch, getBetterFetchOptions } from "../utils/fetchWithRetry";
 
 export async function getOrderDetails(
   url: string,
@@ -7,11 +7,11 @@ export async function getOrderDetails(
   orderKey: string
 ): Promise<HWCOrderDetails> {
   try {
-    const res = await fetchWithRetry(
+    const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
         orderKey
       )}`,
-      getRetryFetchOptions()
+      getBetterFetchOptions()
     );
 
     if (!res.ok) {

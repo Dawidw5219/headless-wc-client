@@ -1,6 +1,6 @@
 import { HWCCustomerData } from "../types/CustomerData";
 import { HWCOrder } from "../types/Order";
-import { fetchWithRetry, getRetryFetchOptions } from "../utils/fetchWithRetry";
+import { betterFetch, getBetterFetchOptions } from "../utils/fetchWithRetry";
 
 // Typ pozwalający na określanie produktu przez id lub slug
 export async function createOrder(
@@ -20,9 +20,9 @@ export async function createOrder(
   }
 ): Promise<HWCOrder> {
   try {
-    const res = await fetchWithRetry(
+    const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/order`,
-      getRetryFetchOptions({
+      getBetterFetchOptions({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

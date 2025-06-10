@@ -1,28 +1,78 @@
 // src/utils/fetchWithRetry.ts
-async function fetchWithRetry(url, options = {}) {
-  const { retries = 3, retryDelay = 500, ...fetchOptions } = options;
+function isDevEnvironment() {
+  return process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+}
+async function betterFetch(url, options = {}) {
+  const { retries = 3, retryDelay = 1e3, ...fetchOptions } = options;
+  const isDev = isDevEnvironment();
   let lastError;
+  let lastResponse;
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await fetch(url, fetchOptions);
-      if (response.ok || attempt === retries) {
+      lastResponse = response;
+      if (response.ok) {
         return response;
       }
+      let responseText = "";
+      let responseJson = null;
+      try {
+        const responseClone = response.clone();
+        responseText = await responseClone.text();
+        if (responseText) {
+          try {
+            responseJson = JSON.parse(responseText);
+          } catch {
+          }
+        }
+      } catch {
+        responseText = "[Could not read response body]";
+      }
+      const errorDetails = {
+        url,
+        method: fetchOptions.method || "GET",
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        responseBody: responseJson || responseText,
+        attempt,
+        maxRetries: retries
+      };
+      if (isDev) {
+        console.error("\u{1F6A8} HTTP Request Failed:", errorDetails);
+      }
       lastError = new Error(`HTTP error! status: ${response.status}`);
+      if (attempt === retries) {
+        return response;
+      }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
+      if (isDev) {
+        console.error("\u{1F6A8} Network/Fetch Error:", {
+          url,
+          method: fetchOptions.method || "GET",
+          error: lastError.message,
+          attempt,
+          maxRetries: retries
+        });
+      }
       if (attempt === retries) {
         throw lastError;
       }
     }
     if (attempt < retries) {
+      if (isDev) {
+        console.warn(
+          `\u23F3 Retrying request in ${retryDelay}ms... (attempt ${attempt + 1}/${retries})`
+        );
+      }
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }
   }
   throw lastError;
 }
-function getRetryFetchOptions(customOptions = {}) {
-  const isDevEnv = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+function getBetterFetchOptions(customOptions = {}) {
+  const isDevEnv = isDevEnvironment();
   return {
     cache: isDevEnv ? "no-store" : "default",
     retries: 3,
@@ -34,9 +84,9 @@ function getRetryFetchOptions(customOptions = {}) {
 // src/api/createCart.ts
 async function createCart(url, products, couponCode = "", customFields) {
   try {
-    const res = await fetchWithRetry(
+    const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/cart`,
-      getRetryFetchOptions({
+      getBetterFetchOptions({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-cache",
@@ -56,9 +106,9 @@ async function createCart(url, products, couponCode = "", customFields) {
 // src/api/createOrder.ts
 async function createOrder(url, props) {
   try {
-    const res = await fetchWithRetry(
+    const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/order`,
-      getRetryFetchOptions({
+      getBetterFetchOptions({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -288,9 +338,9 @@ var HWCCart = class _HWCCart {
 // src/api/getProduct.ts
 async function getProduct(url, idOrSlug) {
   try {
-    const res = await fetchWithRetry(
+    const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/products/${idOrSlug}`,
-      getRetryFetchOptions()
+      getBetterFetchOptions()
     );
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
@@ -305,9 +355,9 @@ async function getProduct(url, idOrSlug) {
 // src/api/getProducts.ts
 async function getProducts(url) {
   try {
-    const res = await fetchWithRetry(
+    const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/products`,
-      getRetryFetchOptions()
+      getBetterFetchOptions()
     );
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
@@ -322,11 +372,11 @@ async function getProducts(url) {
 // src/api/getOrderDetails.ts
 async function getOrderDetails(url, orderId, orderKey) {
   try {
-    const res = await fetchWithRetry(
+    const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
         orderKey
       )}`,
-      getRetryFetchOptions()
+      getBetterFetchOptions()
     );
     if (!res.ok) {
       if (res.status === 400) {
