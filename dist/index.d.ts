@@ -287,11 +287,16 @@ type HWCOrderDetails = {
     };
 };
 
-type ResponseError = {
+type SuccessResp<T> = {
+    success: true;
+    data: T;
+};
+type ErrorResp = {
     success: false;
     message: string;
     error: string;
 };
+type ApiResp<T> = SuccessResp<T> | ErrorResp;
 
 declare class HeadlessWC {
     private url;
@@ -305,11 +310,11 @@ declare class HeadlessWC {
         quantity: number;
     })[], customFields?: {
         [key: string]: any;
-    }): Promise<HWCCart | ResponseError>;
-    getProducts(): Promise<HWCProduct[] | ResponseError>;
-    getProductById(id: number): Promise<HWCProductDetailed | ResponseError>;
-    getProductBySlug(slug: string): Promise<HWCProductDetailed | ResponseError>;
-    getOrderDetails(orderId: number, orderKey: string): Promise<HWCOrderDetails | ResponseError>;
+    }): Promise<HWCCart | ErrorResp>;
+    getProducts(): Promise<ApiResp<HWCProduct[]>>;
+    getProductById(id: number): Promise<ApiResp<HWCProductDetailed>>;
+    getProductBySlug(slug: string): Promise<ApiResp<HWCProductDetailed>>;
+    getOrderDetails(orderId: number, orderKey: string): Promise<ApiResp<HWCOrderDetails>>;
     createOrder(items: ({
         id: number;
         quantity: number;
@@ -326,7 +331,7 @@ declare class HeadlessWC {
         customFields?: {
             [key: string]: any;
         };
-    }): Promise<HWCOrder | ResponseError>;
+    }): Promise<ApiResp<HWCOrder>>;
     static selectProductVariation(product: HWCProductDetailed, attributeValues: {
         [key: string]: string;
     }): HWCProductDetailed;
@@ -335,4 +340,10 @@ declare class HeadlessWC {
     }): HWCProductDetailed;
 }
 
-export { type HWCAddress, type HWCAttribute, HWCCart, type HWCCartProduct, type HWCCustomerData, type HWCOrder, type HWCOrderDetails, type HWCOrderItem, type HWCProduct, type HWCProductDetailed, HeadlessWC, type ResponseError, HeadlessWC as default };
+type HWCErrorResponse = {
+    success: false;
+    message: string;
+    error: string;
+};
+
+export { type HWCAddress, type HWCAttribute, HWCCart, type HWCCartProduct, type HWCCustomerData, type HWCErrorResponse, type HWCOrder, type HWCOrderDetails, type HWCOrderItem, type HWCProduct, type HWCProductDetailed, HeadlessWC, HeadlessWC as default };

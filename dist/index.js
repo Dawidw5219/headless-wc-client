@@ -114,7 +114,7 @@ async function createCart(url, products, couponCode = "", customFields) {
     if (json.success === false) {
       return json;
     }
-    return json;
+    return { success: true, data: json };
   } catch (error) {
     return {
       success: false,
@@ -156,7 +156,7 @@ async function createOrder(url, props) {
     if (json.success === false) {
       return json;
     }
-    return json;
+    return { success: true, data: json };
   } catch (error) {
     return {
       success: false,
@@ -198,10 +198,10 @@ var HWCCart = class _HWCCart {
   }
   static async create(url, cartItems = [], customFields) {
     const cart = await createCart(url, cartItems, "", customFields);
-    if ("success" in cart && cart.success === false) {
+    if (cart.success === false) {
       throw new Error(cart.message);
     }
-    return new _HWCCart({ ...cart, url });
+    return new _HWCCart({ ...cart.data, url });
   }
   async revalidateWithServer() {
     const fetchCart = await createCart(
@@ -210,10 +210,10 @@ var HWCCart = class _HWCCart {
       this.couponCode,
       this.customFields
     );
-    if ("success" in fetchCart && fetchCart.success === false) {
+    if (fetchCart.success === false) {
       throw new Error(fetchCart.message);
     }
-    return new _HWCCart({ url: this.url, ...fetchCart });
+    return new _HWCCart({ url: this.url, ...fetchCart.data });
   }
   changeShippingMethod(shippingMethodId) {
     const shippingMethod = this.shippingMethods.find(
@@ -285,10 +285,10 @@ var HWCCart = class _HWCCart {
       this.couponCode,
       this.customFields
     );
-    if ("success" in fetchCart && fetchCart.success === false) {
+    if (fetchCart.success === false) {
       throw new Error(fetchCart.message);
     }
-    return new _HWCCart({ url: this.url, ...fetchCart });
+    return new _HWCCart({ url: this.url, ...fetchCart.data });
   }
   async addProductBySlug(cartItem) {
     const fetchCart = await createCart(
@@ -297,10 +297,10 @@ var HWCCart = class _HWCCart {
       this.couponCode,
       this.customFields
     );
-    if ("success" in fetchCart && fetchCart.success === false) {
+    if (fetchCart.success === false) {
       throw new Error(fetchCart.message);
     }
-    return new _HWCCart({ url: this.url, ...fetchCart });
+    return new _HWCCart({ url: this.url, ...fetchCart.data });
   }
   removeProduct(product) {
     const newProducts = this.products.filter((item) => item.id !== product.id);
@@ -319,10 +319,10 @@ var HWCCart = class _HWCCart {
       this.couponCode,
       this.customFields
     );
-    if ("success" in fetchCart && fetchCart.success === false) {
+    if (fetchCart.success === false) {
       throw new Error(fetchCart.message);
     }
-    return new _HWCCart({ url: this.url, ...fetchCart });
+    return new _HWCCart({ url: this.url, ...fetchCart.data });
   }
   async addCouponCode(couponCode) {
     if (this.couponCode == couponCode && couponCode != "") {
@@ -334,12 +334,12 @@ var HWCCart = class _HWCCart {
       couponCode,
       this.customFields
     );
-    if ("success" in fetchCart && fetchCart.success === false) {
+    if (fetchCart.success === false) {
       throw new Error(fetchCart.message);
     }
     const newCart = new _HWCCart({
       url: this.url,
-      ...fetchCart
+      ...fetchCart.data
     });
     if (newCart.couponCode !== couponCode) {
       return void 0;
@@ -360,10 +360,10 @@ var HWCCart = class _HWCCart {
       this.couponCode,
       mergedCustomFields
     );
-    if ("success" in fetchCart && fetchCart.success === false) {
+    if (fetchCart.success === false) {
       throw new Error(fetchCart.message);
     }
-    return new _HWCCart({ url: this.url, ...fetchCart });
+    return new _HWCCart({ url: this.url, ...fetchCart.data });
   }
   async submitOrder(props) {
     const mergedCustomFields = {
@@ -376,10 +376,10 @@ var HWCCart = class _HWCCart {
       ...props,
       customFields: mergedCustomFields
     });
-    if ("success" in result && result.success === false) {
+    if (result.success === false) {
       throw new Error(result.message);
     }
-    return result;
+    return result.data;
   }
 };
 
@@ -394,7 +394,7 @@ async function getProduct(url, idOrSlug) {
     if (json.success === false) {
       return json;
     }
-    return json;
+    return { success: true, data: json };
   } catch (error) {
     return {
       success: false,
@@ -413,7 +413,7 @@ async function getProducts(url) {
     if (json.success === false) {
       return json;
     }
-    return json;
+    return { success: true, data: json };
   } catch (error) {
     return {
       success: false,
@@ -436,7 +436,7 @@ async function getOrderDetails(url, orderId, orderKey) {
     if (json.success === false) {
       return json;
     }
-    return json;
+    return { success: true, data: json };
   } catch (error) {
     return {
       success: false,

@@ -34,7 +34,10 @@ export type HWCSimpleProduct = HWCProductBase & {
   };
 };
 
-export type HWCVariation = Omit<HWCSimpleProduct, "type" | "shortDescription"> & {
+export type HWCVariation = Omit<
+  HWCSimpleProduct,
+  "type" | "shortDescription"
+> & {
   type: "variation";
   content?: {
     rendered: string;
