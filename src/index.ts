@@ -6,8 +6,7 @@ import { HWCAttribute } from "./types/Attribute";
 import { HWCCartProduct } from "./types/CartProduct";
 import { HWCOrder } from "./types/Order";
 import { HWCCustomerData } from "./types/CustomerData";
-import { HWCErrorResponse } from "./types/ErrorResponse";
-import { ApiResp, SuccessResp, ErrorResp } from "./types/Response";
+import { HWCResp, HWCData, HWCError } from "./types/Response";
 import {
   HWCOrderDetails,
   HWCOrderItem,
@@ -23,10 +22,9 @@ export {
   HWCCartProduct,
   HWCOrder,
   HWCCustomerData,
-  HWCErrorResponse,
-  ApiResp,
-  SuccessResp,
-  ErrorResp,
+  HWCResp,
+  HWCData,
+  HWCError,
   HWCOrderDetails,
   HWCOrderItem,
   HWCAddress,

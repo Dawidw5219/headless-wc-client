@@ -1,12 +1,12 @@
 import { HWCOrderDetails } from "../types/OrderDetails";
-import { ApiResp, ErrorResp } from "../types/Response";
+import { HWCResp, HWCError } from "../types/Response";
 import { betterFetch } from "../utils/betterFetch";
 
 export async function getOrderDetails(
   url: string,
   orderId: number,
   orderKey: string
-): Promise<ApiResp<HWCOrderDetails>> {
+): Promise<HWCResp<HWCOrderDetails>> {
   try {
     const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
@@ -20,7 +20,7 @@ export async function getOrderDetails(
 
     // Check if API returned error response
     if (json.success === false) {
-      return json as ErrorResp;
+      return json as HWCError;
     }
 
     return { success: true, data: json as HWCOrderDetails };

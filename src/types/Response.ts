@@ -1,15 +1,15 @@
 // Success response type
-export type SuccessResp<T> = {
+export type HWCData<T> = {
   success: true;
   data: T;
 };
 
 // Error response type
-export type ErrorResp = {
+export type HWCError = {
   success: false;
   message: string;
   error: string;
 };
 
 // Combined API response type
-export type ApiResp<T> = SuccessResp<T> | ErrorResp;
+export type HWCResp<T> = HWCData<T> | HWCError;

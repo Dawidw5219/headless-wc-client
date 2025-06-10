@@ -3,7 +3,7 @@ import { HWCCustomerData } from "../types/CustomerData";
 import { HWCOrder } from "../types/Order";
 import { HWCPaymentMethod } from "../types/PaymentMethod";
 import { HWCShippingMethod } from "../types/ShippingMethod";
-import { ErrorResp } from "../types/Response";
+import { HWCError } from "../types/Response";
 import { createCart } from "../api/createCart";
 import { createOrder } from "../api/createOrder";
 import { HWCProductDetailed } from "../types/ProductDetailed";

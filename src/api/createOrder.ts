@@ -1,6 +1,6 @@
 import { HWCCustomerData } from "../types/CustomerData";
 import { HWCOrder } from "../types/Order";
-import { ApiResp, ErrorResp } from "../types/Response";
+import { HWCResp, HWCError } from "../types/Response";
 import { betterFetch } from "../utils/betterFetch";
 
 // Typ pozwalający na określanie produktu przez id lub slug
@@ -19,7 +19,7 @@ export async function createOrder(
     redirectURL?: string;
     customFields?: { [key: string]: any };
   }
-): Promise<ApiResp<HWCOrder>> {
+): Promise<HWCResp<HWCOrder>> {
   try {
     const res = await betterFetch(`${url}/wp-json/headless-wc/v1/order`, {
       method: "POST",
@@ -52,7 +52,7 @@ export async function createOrder(
 
     // Check if API returned error response
     if (json.success === false) {
-      return json as ErrorResp;
+      return json as HWCError;
     }
 
     return { success: true, data: json as HWCOrder };

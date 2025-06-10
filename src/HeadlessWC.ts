@@ -4,7 +4,7 @@ import { HWCProductDetailed } from "./types/ProductDetailed";
 import { HWCOrderDetails } from "./types/OrderDetails";
 import { HWCCustomerData } from "./types/CustomerData";
 import { HWCOrder } from "./types/Order";
-import { ApiResp, ErrorResp } from "./types/Response";
+import { HWCResp, HWCError } from "./types/Response";
 import { getProduct } from "./api/getProduct";
 import { getProducts } from "./api/getProducts";
 import { getOrderDetails } from "./api/getOrderDetails";
@@ -24,7 +24,7 @@ export class HeadlessWC {
       | { slug: string; quantity: number }
     )[] = [],
     customFields?: { [key: string]: any }
-  ): Promise<HWCCart | ErrorResp> {
+  ): Promise<HWCCart | HWCError> {
     try {
       if (!this.cartInstancePromise) {
         this.cartInstancePromise = HWCCart.create(
@@ -43,22 +43,22 @@ export class HeadlessWC {
     }
   }
 
-  async getProducts(): Promise<ApiResp<HWCProduct[]>> {
+  async getProducts(): Promise<HWCResp<HWCProduct[]>> {
     return await getProducts(this.url);
   }
 
-  async getProductById(id: number): Promise<ApiResp<HWCProductDetailed>> {
+  async getProductById(id: number): Promise<HWCResp<HWCProductDetailed>> {
     return await getProduct(this.url, id);
   }
 
-  async getProductBySlug(slug: string): Promise<ApiResp<HWCProductDetailed>> {
+  async getProductBySlug(slug: string): Promise<HWCResp<HWCProductDetailed>> {
     return await getProduct(this.url, slug);
   }
 
   async getOrderDetails(
     orderId: number,
     orderKey: string
-  ): Promise<ApiResp<HWCOrderDetails>> {
+  ): Promise<HWCResp<HWCOrderDetails>> {
     return await getOrderDetails(this.url, orderId, orderKey);
   }
 
@@ -76,7 +76,7 @@ export class HeadlessWC {
       couponCode?: string;
       customFields?: { [key: string]: any };
     }
-  ): Promise<ApiResp<HWCOrder>> {
+  ): Promise<HWCResp<HWCOrder>> {
     return await createOrder(this.url, {
       cartItems: items,
       ...props,

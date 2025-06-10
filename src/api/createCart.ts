@@ -1,5 +1,5 @@
 import { HWCCartType } from "../types/Cart";
-import { ApiResp, ErrorResp } from "../types/Response";
+import { HWCResp, HWCError } from "../types/Response";
 import { betterFetch } from "../utils/betterFetch";
 
 export async function createCart(
@@ -10,7 +10,7 @@ export async function createCart(
   )[],
   couponCode: string = "",
   customFields?: { [key: string]: any }
-): Promise<ApiResp<HWCCartType>> {
+): Promise<HWCResp<HWCCartType>> {
   try {
     const res = await betterFetch(`${url}/wp-json/headless-wc/v1/cart`, {
       method: "POST",
@@ -25,7 +25,7 @@ export async function createCart(
 
     // Check if API returned error response
     if (json.success === false) {
-      return json as ErrorResp;
+      return json as HWCError;
     }
 
     return { success: true, data: json as HWCCartType };
