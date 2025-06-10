@@ -1,7 +1,15 @@
 // src/utils/fetchWithRetry.ts
 var APP_NAME = "HeadlessWC";
 function isDevEnvironment() {
-  return process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+  var _a, _b;
+  if (typeof window !== "undefined") {
+    const hostname = (_a = window.location) == null ? void 0 : _a.hostname;
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || (hostname == null ? void 0 : hostname.includes("localhost")) || (hostname == null ? void 0 : hostname.startsWith("192.168.")) || (hostname == null ? void 0 : hostname.startsWith("10.")) || (hostname == null ? void 0 : hostname.endsWith(".local"));
+    const port = (_b = window.location) == null ? void 0 : _b.port;
+    const isDevelopmentPort = !!(port && (port === "3000" || port === "3001" || port === "5173" || port === "8080"));
+    return isLocalhost || isDevelopmentPort;
+  }
+  return process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_VERCEL_ENV === "development" || process.env.VERCEL_ENV === "development" || process.env.ENVIRONMENT === "development" || process.env.APP_ENV === "development" || !process.env.NODE_ENV;
 }
 async function betterFetch(url, options = {}) {
   const { retries = 3, retryDelay = 1e3, ...fetchOptions } = options;

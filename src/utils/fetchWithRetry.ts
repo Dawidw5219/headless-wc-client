@@ -7,9 +7,40 @@ export interface BetterFetchOptions extends RequestInit {
 
 /**
  * Check if we're in development environment
+ * Supports various environments including Next.js, Vercel, and standard Node.js
  */
 function isDevEnvironment(): boolean {
-  return process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
+  // Check if we're in browser environment
+  if (typeof window !== "undefined") {
+    // Browser environment - check for localhost or development indicators
+    const hostname = window.location?.hostname;
+    const isLocalhost =
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname?.includes("localhost") ||
+      hostname?.startsWith("192.168.") ||
+      hostname?.startsWith("10.") ||
+      hostname?.endsWith(".local");
+
+    // Also check for development port numbers
+    const port = window.location?.port;
+    const isDevelopmentPort = !!(
+      port &&
+      (port === "3000" || port === "3001" || port === "5173" || port === "8080")
+    );
+
+    return isLocalhost || isDevelopmentPort;
+  }
+
+  // Server environment - check process.env variables
+  return (
+    process.env.NODE_ENV === "development" ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV === "development" ||
+    process.env.VERCEL_ENV === "development" ||
+    process.env.ENVIRONMENT === "development" ||
+    process.env.APP_ENV === "development" ||
+    !process.env.NODE_ENV
+  );
 }
 
 /**
