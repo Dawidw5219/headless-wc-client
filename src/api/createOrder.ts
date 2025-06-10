@@ -13,11 +13,9 @@ export async function createOrder(
     couponCode?: string;
     billingData: HWCCustomerData;
     shippingData?: HWCCustomerData;
-    shippingMethodId: string;
-    paymentMethodId: string;
+    shippingMethodId?: string;
+    paymentMethodId?: string;
     redirectURL?: string;
-    furgonetkaPoint?: string;
-    furgonetkaPointName?: string;
     customFields?: { [key: string]: any };
   }
 ): Promise<HWCOrder> {
@@ -45,8 +43,6 @@ export async function createOrder(
           billingPhone: props.billingData.phone,
           billingEmail: props.billingData.email,
           billingCompany: props.billingData.company,
-          furgonetkaPoint: props.furgonetkaPoint,
-          furgonetkaPointName: props.furgonetkaPointName,
           customFields: props.customFields,
         }),
       })

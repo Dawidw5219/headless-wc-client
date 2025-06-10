@@ -61,8 +61,6 @@ export class HeadlessWC {
       paymentMethodId: string;
       redirectURL?: string;
       couponCode?: string;
-      furgonetkaPoint?: string;
-      furgonetkaPointName?: string;
       customFields?: { [key: string]: any };
     }
   ): Promise<HWCOrder> {

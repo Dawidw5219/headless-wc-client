@@ -106,8 +106,6 @@ async function createOrder(url, props) {
           billingPhone: props.billingData.phone,
           billingEmail: props.billingData.email,
           billingCompany: props.billingData.company,
-          furgonetkaPoint: props.furgonetkaPoint,
-          furgonetkaPointName: props.furgonetkaPointName,
           customFields: props.customFields
         })
       })
