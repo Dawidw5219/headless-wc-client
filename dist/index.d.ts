@@ -287,6 +287,12 @@ type HWCOrderDetails = {
     };
 };
 
+type ResponseError = {
+    success: false;
+    message: string;
+    error: string;
+};
+
 declare class HeadlessWC {
     private url;
     private cartInstancePromise;
@@ -299,11 +305,11 @@ declare class HeadlessWC {
         quantity: number;
     })[], customFields?: {
         [key: string]: any;
-    }): Promise<HWCCart>;
-    getProducts(): Promise<HWCProduct[]>;
-    getProductById(id: number): Promise<HWCProductDetailed>;
-    getProductBySlug(slug: string): Promise<HWCProductDetailed>;
-    getOrderDetails(orderId: number, orderKey: string): Promise<HWCOrderDetails>;
+    }): Promise<HWCCart | ResponseError>;
+    getProducts(): Promise<HWCProduct[] | ResponseError>;
+    getProductById(id: number): Promise<HWCProductDetailed | ResponseError>;
+    getProductBySlug(slug: string): Promise<HWCProductDetailed | ResponseError>;
+    getOrderDetails(orderId: number, orderKey: string): Promise<HWCOrderDetails | ResponseError>;
     createOrder(items: ({
         id: number;
         quantity: number;
@@ -320,7 +326,7 @@ declare class HeadlessWC {
         customFields?: {
             [key: string]: any;
         };
-    }): Promise<HWCOrder>;
+    }): Promise<HWCOrder | ResponseError>;
     static selectProductVariation(product: HWCProductDetailed, attributeValues: {
         [key: string]: string;
     }): HWCProductDetailed;
@@ -329,4 +335,4 @@ declare class HeadlessWC {
     }): HWCProductDetailed;
 }
 
-export { type HWCAddress, type HWCAttribute, HWCCart, type HWCCartProduct, type HWCCustomerData, type HWCOrder, type HWCOrderDetails, type HWCOrderItem, type HWCProduct, type HWCProductDetailed, HeadlessWC, HeadlessWC as default };
+export { type HWCAddress, type HWCAttribute, HWCCart, type HWCCartProduct, type HWCCustomerData, type HWCOrder, type HWCOrderDetails, type HWCOrderItem, type HWCProduct, type HWCProductDetailed, HeadlessWC, type ResponseError, HeadlessWC as default };

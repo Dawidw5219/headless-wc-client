@@ -1,37 +1,34 @@
 import { HWCOrderDetails } from "../types/OrderDetails";
-import { betterFetch, getBetterFetchOptions } from "../utils/fetchWithRetry";
+import { ResponseError } from "../types/ResponseError";
+import { betterFetch } from "../utils/betterFetch";
 
 export async function getOrderDetails(
   url: string,
   orderId: number,
   orderKey: string
-): Promise<HWCOrderDetails> {
+): Promise<HWCOrderDetails | ResponseError> {
   try {
     const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
         orderKey
-      )}`,
-      getBetterFetchOptions()
+      )}`
     );
 
-    if (!res.ok) {
-      if (res.status === 400) {
-        throw new Error("Bad request - Missing order ID or order key");
-      } else if (res.status === 403) {
-        throw new Error("Forbidden - Invalid order key");
-      } else if (res.status === 404) {
-        throw new Error("Not found - Order does not exist");
-      }
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
     const json = await res.json();
-    if (json["success"] !== true)
-      throw new Error("Invalid response from server");
+
+    // Check if API returned error response
+    if (json.success === false) {
+      return json as ResponseError;
+    }
 
     return json as HWCOrderDetails;
   } catch (error) {
-    console.error("Error fetching order details:", error);
-    throw error;
+    return {
+      success: false,
+      message: "Network or HTTP error occurred",
+      error: "internal",
+    };
   }
 }

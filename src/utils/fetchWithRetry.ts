@@ -178,7 +178,7 @@ export function getBetterFetchOptions(
   return {
     cache: isDevEnv ? "no-store" : "default",
     retries: 3,
-    retryDelay: 500,
+    retryDelay: 1000,
     ...customOptions,
   };
 }

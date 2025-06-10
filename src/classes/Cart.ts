@@ -3,6 +3,7 @@ import { HWCCustomerData } from "../types/CustomerData";
 import { HWCOrder } from "../types/Order";
 import { HWCPaymentMethod } from "../types/PaymentMethod";
 import { HWCShippingMethod } from "../types/ShippingMethod";
+import { ResponseError } from "../types/ResponseError";
 import { createCart } from "../api/createCart";
 import { createOrder } from "../api/createOrder";
 import { HWCProductDetailed } from "../types/ProductDetailed";
@@ -53,8 +54,10 @@ export class HWCCart implements HWCCartType {
     customFields?: { [key: string]: any }
   ): Promise<HWCCart> {
     const cart = await createCart(url, cartItems, "", customFields);
-    const { total, ...rest } = cart;
-    return new HWCCart({ ...cart, url });
+    if ("success" in cart && cart.success === false) {
+      throw new Error(cart.message);
+    }
+    return new HWCCart({ ...(cart as HWCCartType), url });
   }
 
   async revalidateWithServer(): Promise<HWCCart> {
@@ -64,7 +67,10 @@ export class HWCCart implements HWCCartType {
       this.couponCode,
       this.customFields
     );
-    return new HWCCart({ url: this.url, ...fetchCart });
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
+    return new HWCCart({ url: this.url, ...(fetchCart as HWCCartType) });
   }
 
   changeShippingMethod(shippingMethodId: string): HWCCart {
@@ -155,7 +161,10 @@ export class HWCCart implements HWCCartType {
       this.couponCode,
       this.customFields
     );
-    return new HWCCart({ url: this.url, ...fetchCart });
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
+    return new HWCCart({ url: this.url, ...(fetchCart as HWCCartType) });
   }
 
   async addProductBySlug(cartItem: {
@@ -168,7 +177,10 @@ export class HWCCart implements HWCCartType {
       this.couponCode,
       this.customFields
     );
-    return new HWCCart({ url: this.url, ...fetchCart });
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
+    return new HWCCart({ url: this.url, ...(fetchCart as HWCCartType) });
   }
 
   removeProduct(product: HWCProductDetailed): HWCCart {
@@ -189,8 +201,10 @@ export class HWCCart implements HWCCartType {
       this.couponCode,
       this.customFields
     );
-    // const { total, ...rest } = fetchCart;
-    return new HWCCart({ url: this.url, ...fetchCart });
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
+    return new HWCCart({ url: this.url, ...(fetchCart as HWCCartType) });
   }
 
   async addCouponCode(couponCode: string): Promise<HWCCart | undefined> {
@@ -203,8 +217,13 @@ export class HWCCart implements HWCCartType {
       couponCode,
       this.customFields
     );
-    //const { total, ...rest } = fetchCart;
-    const newCart = new HWCCart({ url: this.url, ...fetchCart });
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
+    const newCart = new HWCCart({
+      url: this.url,
+      ...(fetchCart as HWCCartType),
+    });
     if (newCart.couponCode !== couponCode) {
       return undefined;
     }
@@ -228,7 +247,10 @@ export class HWCCart implements HWCCartType {
       this.couponCode,
       mergedCustomFields
     );
-    return new HWCCart({ url: this.url, ...fetchCart });
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
+    return new HWCCart({ url: this.url, ...(fetchCart as HWCCartType) });
   }
 
   async submitOrder(props: {
@@ -247,11 +269,17 @@ export class HWCCart implements HWCCartType {
       ...props.customFields,
     };
 
-    return await createOrder(this.url, {
+    const result = await createOrder(this.url, {
       cartItems: this.cartItems,
       couponCode: this.couponCode,
       ...props,
       customFields: mergedCustomFields,
     });
+
+    if ("success" in result && result.success === false) {
+      throw new Error((result as ResponseError).message);
+    }
+
+    return result as HWCOrder;
   }
 }

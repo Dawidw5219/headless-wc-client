@@ -1,85 +1,68 @@
-// src/utils/fetchWithRetry.ts
+// src/utils/betterFetch.ts
 var APP_NAME = "HeadlessWC";
 function isDevEnvironment() {
   var _a, _b;
   if (typeof window !== "undefined") {
     const hostname = (_a = window.location) == null ? void 0 : _a.hostname;
-    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || (hostname == null ? void 0 : hostname.includes("localhost")) || (hostname == null ? void 0 : hostname.startsWith("192.168.")) || (hostname == null ? void 0 : hostname.startsWith("10.")) || (hostname == null ? void 0 : hostname.endsWith(".local"));
-    const port = (_b = window.location) == null ? void 0 : _b.port;
-    const isDevelopmentPort = !!(port && (port === "3000" || port === "3001" || port === "5173" || port === "8080"));
-    return isLocalhost || isDevelopmentPort;
+    return hostname === "localhost" || hostname === "127.0.0.1" || (hostname == null ? void 0 : hostname.includes("localhost")) || ((_b = window.location) == null ? void 0 : _b.port) === "3000";
   }
-  return process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_VERCEL_ENV === "development" || process.env.VERCEL_ENV === "development" || process.env.ENVIRONMENT === "development" || process.env.APP_ENV === "development" || !process.env.NODE_ENV;
+  return process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "development" || !process.env.NODE_ENV;
 }
 async function betterFetch(url, options = {}) {
   const { retries = 3, retryDelay = 1e3, ...fetchOptions } = options;
   const isDev = isDevEnvironment();
+  if (!fetchOptions.cache) {
+    fetchOptions.cache = isDev ? "no-store" : "default";
+  }
   let lastError;
-  let lastResponse;
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await fetch(url, fetchOptions);
-      lastResponse = response;
       if (response.ok) {
         return response;
       }
-      let responseText = "";
-      let responseJson = null;
+      let responseBody = "[Could not read response]";
       try {
-        const responseClone = response.clone();
-        responseText = await responseClone.text();
-        if (responseText) {
-          try {
-            responseJson = JSON.parse(responseText);
-          } catch {
-          }
-        }
+        const clone = response.clone();
+        const text = await clone.text();
+        responseBody = text ? JSON.parse(text) : text;
       } catch {
-        responseText = "[Could not read response body]";
       }
       lastError = new Error(`HTTP error! status: ${response.status}`);
       if (attempt === retries && isDev) {
-        console.error(
-          `[${APP_NAME}] \u{1F6A8} Request failed after ${retries} attempts:`,
-          {
-            url,
-            method: fetchOptions.method || "GET",
-            status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries()),
-            responseBody: responseJson || responseText,
-            totalAttempts: retries
-          }
-        );
+        console.error(`[${APP_NAME}] \u{1F6A8} Request failed:`, {
+          url,
+          method: fetchOptions.method || "GET",
+          status: response.status,
+          statusText: response.statusText,
+          responseBody,
+          attempts: retries
+        });
       }
       if (attempt === retries) {
         return response;
       }
-      if (isDev && attempt < retries) {
+      if (isDev) {
         console.warn(
-          `[${APP_NAME}] \u23F3 HTTP ${response.status} - Retrying in ${retryDelay}ms (attempt ${attempt + 1}/${retries})`
+          `[${APP_NAME}] \u23F3 HTTP ${response.status} - Retry ${attempt + 1}/${retries}`
         );
       }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       if (attempt === retries && isDev) {
-        console.error(
-          `[${APP_NAME}] \u{1F6A8} Network error after ${retries} attempts:`,
-          {
-            url,
-            method: fetchOptions.method || "GET",
-            error: lastError.message,
-            errorType: lastError.constructor.name,
-            totalAttempts: retries
-          }
-        );
+        console.error(`[${APP_NAME}] \u{1F6A8} Network error:`, {
+          url,
+          method: fetchOptions.method || "GET",
+          error: lastError.message,
+          attempts: retries
+        });
       }
       if (attempt === retries) {
         throw lastError;
       }
-      if (isDev && attempt < retries) {
+      if (isDev) {
         console.warn(
-          `[${APP_NAME}] \u23F3 Network error - Retrying in ${retryDelay}ms (attempt ${attempt + 1}/${retries})`
+          `[${APP_NAME}] \u23F3 Network error - Retry ${attempt + 1}/${retries}`
         );
       }
     }
@@ -89,77 +72,70 @@ async function betterFetch(url, options = {}) {
   }
   throw lastError;
 }
-function getBetterFetchOptions(customOptions = {}) {
-  const isDevEnv = isDevEnvironment();
-  return {
-    cache: isDevEnv ? "no-store" : "default",
-    retries: 3,
-    retryDelay: 500,
-    ...customOptions
-  };
-}
 
 // src/api/createCart.ts
 async function createCart(url, products, couponCode = "", customFields) {
   try {
-    const res = await betterFetch(
-      `${url}/wp-json/headless-wc/v1/cart`,
-      getBetterFetchOptions({
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-cache",
-        body: JSON.stringify({ cart: products, couponCode, customFields })
-      })
-    );
+    const res = await betterFetch(`${url}/wp-json/headless-wc/v1/cart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-cache",
+      body: JSON.stringify({ cart: products, couponCode, customFields })
+    });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
-    if (json["success"] != true) throw new Error();
+    if (json.success === false) {
+      return json;
+    }
     return json;
   } catch (error) {
-    console.error("Error fetching products:", error);
-    throw error;
+    return {
+      success: false,
+      message: "Network or HTTP error occurred",
+      error: "internal"
+    };
   }
 }
 
 // src/api/createOrder.ts
 async function createOrder(url, props) {
   try {
-    const res = await betterFetch(
-      `${url}/wp-json/headless-wc/v1/order`,
-      getBetterFetchOptions({
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cart: props.cartItems,
-          couponCode: props.couponCode ?? "",
-          shippingMethodId: props.shippingMethodId,
-          paymentMethodId: props.paymentMethodId,
-          redirectUrl: props.redirectURL ?? "",
-          useDifferentShipping: false,
-          billingFirstName: props.billingData.firstName,
-          billingLastName: props.billingData.lastName,
-          billingAddress1: props.billingData.address1,
-          billingAddress2: props.billingData.address2 ?? "",
-          billingCity: props.billingData.city,
-          billingState: props.billingData.state,
-          billingPostcode: props.billingData.postcode,
-          billingCountry: props.billingData.country,
-          billingPhone: props.billingData.phone,
-          billingEmail: props.billingData.email,
-          billingCompany: props.billingData.company,
-          customFields: props.customFields
-        })
+    const res = await betterFetch(`${url}/wp-json/headless-wc/v1/order`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cart: props.cartItems,
+        couponCode: props.couponCode ?? "",
+        shippingMethodId: props.shippingMethodId,
+        paymentMethodId: props.paymentMethodId,
+        redirectUrl: props.redirectURL ?? "",
+        useDifferentShipping: false,
+        billingFirstName: props.billingData.firstName,
+        billingLastName: props.billingData.lastName,
+        billingAddress1: props.billingData.address1,
+        billingAddress2: props.billingData.address2 ?? "",
+        billingCity: props.billingData.city,
+        billingState: props.billingData.state,
+        billingPostcode: props.billingData.postcode,
+        billingCountry: props.billingData.country,
+        billingPhone: props.billingData.phone,
+        billingEmail: props.billingData.email,
+        billingCompany: props.billingData.company,
+        customFields: props.customFields
       })
-    );
+    });
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
-    if (json["success"] != true) throw new Error();
+    if (json.success === false) {
+      return json;
+    }
     return json;
   } catch (error) {
-    console.error(error);
-    throw new Error(
-      "Invalid response from WooCommerce Server. Couldn't create an order"
-    );
+    return {
+      success: false,
+      message: "Network or HTTP error occurred",
+      error: "internal"
+    };
   }
 }
 
@@ -195,7 +171,9 @@ var HWCCart = class _HWCCart {
   }
   static async create(url, cartItems = [], customFields) {
     const cart = await createCart(url, cartItems, "", customFields);
-    const { total, ...rest } = cart;
+    if ("success" in cart && cart.success === false) {
+      throw new Error(cart.message);
+    }
     return new _HWCCart({ ...cart, url });
   }
   async revalidateWithServer() {
@@ -205,6 +183,9 @@ var HWCCart = class _HWCCart {
       this.couponCode,
       this.customFields
     );
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
     return new _HWCCart({ url: this.url, ...fetchCart });
   }
   changeShippingMethod(shippingMethodId) {
@@ -277,6 +258,9 @@ var HWCCart = class _HWCCart {
       this.couponCode,
       this.customFields
     );
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
     return new _HWCCart({ url: this.url, ...fetchCart });
   }
   async addProductBySlug(cartItem) {
@@ -286,6 +270,9 @@ var HWCCart = class _HWCCart {
       this.couponCode,
       this.customFields
     );
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
     return new _HWCCart({ url: this.url, ...fetchCart });
   }
   removeProduct(product) {
@@ -305,6 +292,9 @@ var HWCCart = class _HWCCart {
       this.couponCode,
       this.customFields
     );
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
     return new _HWCCart({ url: this.url, ...fetchCart });
   }
   async addCouponCode(couponCode) {
@@ -317,7 +307,13 @@ var HWCCart = class _HWCCart {
       couponCode,
       this.customFields
     );
-    const newCart = new _HWCCart({ url: this.url, ...fetchCart });
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
+    const newCart = new _HWCCart({
+      url: this.url,
+      ...fetchCart
+    });
     if (newCart.couponCode !== couponCode) {
       return void 0;
     }
@@ -337,6 +333,9 @@ var HWCCart = class _HWCCart {
       this.couponCode,
       mergedCustomFields
     );
+    if ("success" in fetchCart && fetchCart.success === false) {
+      throw new Error(fetchCart.message);
+    }
     return new _HWCCart({ url: this.url, ...fetchCart });
   }
   async submitOrder(props) {
@@ -344,12 +343,16 @@ var HWCCart = class _HWCCart {
       ...this.customFields,
       ...props.customFields
     };
-    return await createOrder(this.url, {
+    const result = await createOrder(this.url, {
       cartItems: this.cartItems,
       couponCode: this.couponCode,
       ...props,
       customFields: mergedCustomFields
     });
+    if ("success" in result && result.success === false) {
+      throw new Error(result.message);
+    }
+    return result;
   }
 };
 
@@ -357,33 +360,39 @@ var HWCCart = class _HWCCart {
 async function getProduct(url, idOrSlug) {
   try {
     const res = await betterFetch(
-      `${url}/wp-json/headless-wc/v1/products/${idOrSlug}`,
-      getBetterFetchOptions()
+      `${url}/wp-json/headless-wc/v1/products/${idOrSlug}`
     );
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
-    if (json["success"] != true) throw new Error();
-    return json.data;
+    if (json.success === false) {
+      return json;
+    }
+    return json;
   } catch (error) {
-    console.error("Error fetching products:", error);
-    throw error;
+    return {
+      success: false,
+      message: "Network or HTTP error occurred",
+      error: "internal"
+    };
   }
 }
 
 // src/api/getProducts.ts
 async function getProducts(url) {
   try {
-    const res = await betterFetch(
-      `${url}/wp-json/headless-wc/v1/products`,
-      getBetterFetchOptions()
-    );
+    const res = await betterFetch(`${url}/wp-json/headless-wc/v1/products`);
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
-    if (json["success"] != true) throw new Error();
-    return json.data;
+    if (json.success === false) {
+      return json;
+    }
+    return json;
   } catch (error) {
-    console.error("Error fetching products:", error);
-    throw error;
+    return {
+      success: false,
+      message: "Network or HTTP error occurred",
+      error: "internal"
+    };
   }
 }
 
@@ -393,26 +402,20 @@ async function getOrderDetails(url, orderId, orderKey) {
     const res = await betterFetch(
       `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
         orderKey
-      )}`,
-      getBetterFetchOptions()
+      )}`
     );
-    if (!res.ok) {
-      if (res.status === 400) {
-        throw new Error("Bad request - Missing order ID or order key");
-      } else if (res.status === 403) {
-        throw new Error("Forbidden - Invalid order key");
-      } else if (res.status === 404) {
-        throw new Error("Not found - Order does not exist");
-      }
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const json = await res.json();
-    if (json["success"] !== true)
-      throw new Error("Invalid response from server");
+    if (json.success === false) {
+      return json;
+    }
     return json;
   } catch (error) {
-    console.error("Error fetching order details:", error);
-    throw error;
+    return {
+      success: false,
+      message: "Network or HTTP error occurred",
+      error: "internal"
+    };
   }
 }
 
@@ -424,10 +427,22 @@ var HeadlessWC = class {
     this.url = url;
   }
   async createCart(items = [], customFields) {
-    if (!this.cartInstancePromise) {
-      this.cartInstancePromise = HWCCart.create(this.url, items, customFields);
+    try {
+      if (!this.cartInstancePromise) {
+        this.cartInstancePromise = HWCCart.create(
+          this.url,
+          items,
+          customFields
+        );
+      }
+      return await this.cartInstancePromise;
+    } catch (error) {
+      return {
+        success: false,
+        message: "Failed to create cart",
+        error: "internal"
+      };
     }
-    return this.cartInstancePromise;
   }
   async getProducts() {
     return await getProducts(this.url);

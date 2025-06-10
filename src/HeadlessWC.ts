@@ -4,6 +4,7 @@ import { HWCProductDetailed } from "./types/ProductDetailed";
 import { HWCOrderDetails } from "./types/OrderDetails";
 import { HWCCustomerData } from "./types/CustomerData";
 import { HWCOrder } from "./types/Order";
+import { ResponseError } from "./types/ResponseError";
 import { getProduct } from "./api/getProduct";
 import { getProducts } from "./api/getProducts";
 import { getOrderDetails } from "./api/getOrderDetails";
@@ -23,29 +24,45 @@ export class HeadlessWC {
       | { slug: string; quantity: number }
     )[] = [],
     customFields?: { [key: string]: any }
-  ): Promise<HWCCart> {
-    if (!this.cartInstancePromise) {
-      this.cartInstancePromise = HWCCart.create(this.url, items, customFields);
+  ): Promise<HWCCart | ResponseError> {
+    try {
+      if (!this.cartInstancePromise) {
+        this.cartInstancePromise = HWCCart.create(
+          this.url,
+          items,
+          customFields
+        );
+      }
+      return await this.cartInstancePromise;
+    } catch (error) {
+      return {
+        success: false,
+        message: "Failed to create cart",
+        error: "internal",
+      };
     }
-    return this.cartInstancePromise;
   }
 
-  async getProducts(): Promise<HWCProduct[]> {
+  async getProducts(): Promise<HWCProduct[] | ResponseError> {
     return await getProducts(this.url);
   }
 
-  async getProductById(id: number): Promise<HWCProductDetailed> {
+  async getProductById(
+    id: number
+  ): Promise<HWCProductDetailed | ResponseError> {
     return await getProduct(this.url, id);
   }
 
-  async getProductBySlug(slug: string): Promise<HWCProductDetailed> {
+  async getProductBySlug(
+    slug: string
+  ): Promise<HWCProductDetailed | ResponseError> {
     return await getProduct(this.url, slug);
   }
 
   async getOrderDetails(
     orderId: number,
     orderKey: string
-  ): Promise<HWCOrderDetails> {
+  ): Promise<HWCOrderDetails | ResponseError> {
     return await getOrderDetails(this.url, orderId, orderKey);
   }
 
@@ -63,7 +80,7 @@ export class HeadlessWC {
       couponCode?: string;
       customFields?: { [key: string]: any };
     }
-  ): Promise<HWCOrder> {
+  ): Promise<HWCOrder | ResponseError> {
     return await createOrder(this.url, {
       cartItems: items,
       ...props,
