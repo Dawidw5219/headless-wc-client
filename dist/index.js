@@ -1,6 +1,9 @@
+"use strict";
+var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -14,521 +17,869 @@ var __copyProps = (to, from, except, desc) => {
   }
   return to;
 };
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/index.ts
 var src_exports = {};
 __export(src_exports, {
-  HWCCart: () => HWCCart,
-  HeadlessWC: () => HeadlessWC,
-  default: () => src_default
+  addToCart: () => addToCart,
+  applyCoupon: () => applyCoupon,
+  changeVariant: () => changeVariant,
+  createCart: () => createCart2,
+  createOrder: () => createOrder2,
+  getAllAuthors: () => getAllAuthors,
+  getAllCategories: () => getAllCategories,
+  getAllPages: () => getAllPages,
+  getAllPosts: () => getAllPosts,
+  getAllTags: () => getAllTags,
+  getAuthorById: () => getAuthorById,
+  getAuthorBySlug: () => getAuthorBySlug,
+  getAvailableOptions: () => getAvailableOptions,
+  getBaseUrl: () => getBaseUrl,
+  getCart: () => getCart,
+  getCategoryById: () => getCategoryById,
+  getCategoryBySlug: () => getCategoryBySlug,
+  getFeaturedMediaById: () => getFeaturedMediaById,
+  getInitialSelection: () => getInitialSelection,
+  getOrderDetails: () => getOrderDetails2,
+  getPageById: () => getPageById,
+  getPageBySlug: () => getPageBySlug,
+  getPostById: () => getPostById,
+  getPostBySlug: () => getPostBySlug,
+  getPostsByAuthor: () => getPostsByAuthor,
+  getPostsByAuthorSlug: () => getPostsByAuthorSlug,
+  getPostsByCategory: () => getPostsByCategory,
+  getPostsByCategorySlug: () => getPostsByCategorySlug,
+  getPostsByTag: () => getPostsByTag,
+  getPostsByTagSlug: () => getPostsByTagSlug,
+  getProduct: () => getProduct2,
+  getProductCategories: () => getProductCategories,
+  getProductCategoryById: () => getProductCategoryById,
+  getProductCategoryBySlug: () => getProductCategoryBySlug,
+  getProductTagById: () => getProductTagById,
+  getProductTagBySlug: () => getProductTagBySlug,
+  getProductTags: () => getProductTags,
+  getProducts: () => getProducts2,
+  getTagById: () => getTagById,
+  getTagBySlug: () => getTagBySlug,
+  getTagsByPost: () => getTagsByPost,
+  getVariantMatch: () => getVariantMatch,
+  getVariantState: () => getVariantState,
+  normalizeSelection: () => normalizeSelection,
+  removeCoupon: () => removeCoupon,
+  removeFromCart: () => removeFromCart,
+  revalidateCart: () => revalidateCart,
+  revalidateNextjsCache: () => revalidateNextjsCache,
+  revalidatePages: () => revalidatePages,
+  revalidateProducts: () => revalidateProducts,
+  setWooCommerceUrl: () => setWooCommerceUrl,
+  updateCart: () => updateCart,
+  updateCartItem: () => updateCartItem,
+  updateSelection: () => updateSelection
 });
 module.exports = __toCommonJS(src_exports);
 
-// src/utils/betterFetch.ts
+// src/core/config.ts
+var BASE_URL;
+function setWooCommerceUrl(baseUrl) {
+  BASE_URL = baseUrl;
+}
+function getBaseUrl() {
+  if (BASE_URL) return BASE_URL;
+  const fromEnv = process.env.WOOCOMMERCE_BASE_URL || process.env.PUBLIC_WOOCOMMERCE_BASE_URL || process.env.NEXT_PUBLIC_WOOCOMMERCE_BASE_URL;
+  if (fromEnv) return fromEnv;
+  throw new Error(
+    "WooCommerce base URL not set. Call setWooCommerceUrl(baseUrl) or provide WOOCOMMERCE_BASE_URL / PUBLIC_WOOCOMMERCE_BASE_URL / NEXT_PUBLIC_WOOCOMMERCE_BASE_URL."
+  );
+}
+
+// src/api/wordpress.ts
+function getUrl(path, query) {
+  const url = new URL(path, getBaseUrl());
+  if (query) {
+    Object.entries(query).forEach(([key, value]) => {
+      if (value !== void 0 && value !== null) {
+        url.searchParams.append(key, String(value));
+      }
+    });
+  }
+  return url.toString();
+}
+async function getAllPosts(filterParams) {
+  const full = getUrl("/wp-json/wp/v2/posts", {
+    author: filterParams?.author,
+    tags: filterParams?.tag,
+    categories: filterParams?.category
+  });
+  const response = await fetch(full);
+  return await response.json();
+}
+async function getPostById(id) {
+  const full = getUrl(`/wp-json/wp/v2/posts/${id}`);
+  const response = await fetch(full);
+  return await response.json();
+}
+async function getPostBySlug(slug) {
+  const full = getUrl("/wp-json/wp/v2/posts", { slug });
+  const response = await fetch(full);
+  const list = await response.json();
+  return list[0];
+}
+async function getAllCategories() {
+  const response = await fetch(getUrl("/wp-json/wp/v2/categories"));
+  return await response.json();
+}
+async function getCategoryById(id) {
+  const response = await fetch(getUrl(`/wp-json/wp/v2/categories/${id}`));
+  return await response.json();
+}
+async function getCategoryBySlug(slug) {
+  const response = await fetch(getUrl("/wp-json/wp/v2/categories", { slug }));
+  const list = await response.json();
+  return list[0];
+}
+async function getPostsByCategory(categoryId) {
+  const response = await fetch(
+    getUrl("/wp-json/wp/v2/posts", { categories: categoryId })
+  );
+  return await response.json();
+}
+async function getPostsByTag(tagId) {
+  const response = await fetch(getUrl("/wp-json/wp/v2/posts", { tags: tagId }));
+  return await response.json();
+}
+async function getTagsByPost(postId) {
+  const response = await fetch(getUrl("/wp-json/wp/v2/tags", { post: postId }));
+  return await response.json();
+}
+async function getAllTags() {
+  const response = await fetch(getUrl("/wp-json/wp/v2/tags"));
+  return await response.json();
+}
+async function getTagById(id) {
+  const response = await fetch(getUrl(`/wp-json/wp/v2/tags/${id}`));
+  return await response.json();
+}
+async function getTagBySlug(slug) {
+  const response = await fetch(getUrl("/wp-json/wp/v2/tags", { slug }));
+  const list = await response.json();
+  return list[0];
+}
+async function getAllPages() {
+  const response = await fetch(getUrl("/wp-json/wp/v2/pages"));
+  return await response.json();
+}
+async function getPageById(id) {
+  const response = await fetch(getUrl(`/wp-json/wp/v2/pages/${id}`));
+  return await response.json();
+}
+async function getPageBySlug(slug) {
+  const response = await fetch(getUrl("/wp-json/wp/v2/pages", { slug }));
+  const list = await response.json();
+  return list[0];
+}
+async function getAllAuthors() {
+  const response = await fetch(getUrl("/wp-json/wp/v2/users"));
+  return await response.json();
+}
+async function getAuthorById(id) {
+  const response = await fetch(getUrl(`/wp-json/wp/v2/users/${id}`));
+  return await response.json();
+}
+async function getAuthorBySlug(slug) {
+  const response = await fetch(getUrl("/wp-json/wp/v2/users", { slug }));
+  const list = await response.json();
+  return list[0];
+}
+async function getPostsByAuthor(authorId) {
+  const response = await fetch(
+    getUrl("/wp-json/wp/v2/posts", { author: authorId })
+  );
+  return await response.json();
+}
+async function getPostsByAuthorSlug(authorSlug) {
+  const author = await getAuthorBySlug(authorSlug);
+  const response = await fetch(
+    getUrl("/wp-json/wp/v2/posts", { author: author.id })
+  );
+  return await response.json();
+}
+async function getPostsByCategorySlug(categorySlug) {
+  const category = await getCategoryBySlug(categorySlug);
+  const response = await fetch(
+    getUrl("/wp-json/wp/v2/posts", { categories: category.id })
+  );
+  return await response.json();
+}
+async function getPostsByTagSlug(tagSlug) {
+  const tag = await getTagBySlug(tagSlug);
+  const response = await fetch(
+    getUrl("/wp-json/wp/v2/posts", { tags: tag.id })
+  );
+  return await response.json();
+}
+async function getFeaturedMediaById(url, id) {
+  const response = await fetch(getUrl(`/wp-json/wp/v2/media/${id}`));
+  return await response.json();
+}
+function buildTaxonomyQuery(params) {
+  if (!params) return "";
+  const qs = new URLSearchParams();
+  const pairs = [
+    ["search", params.search],
+    ["page", params.page !== void 0 ? String(params.page) : void 0],
+    [
+      "per_page",
+      params.perPage !== void 0 ? String(params.perPage) : void 0
+    ],
+    ["parent", params.parent !== void 0 ? String(params.parent) : void 0],
+    [
+      "hide_empty",
+      params.hideEmpty !== void 0 ? String(params.hideEmpty) : void 0
+    ]
+  ];
+  for (const [k, v] of pairs) {
+    if (v !== void 0) qs.set(k, v);
+  }
+  const s = qs.toString();
+  return s ? `?${s}` : "";
+}
+async function getProductCategories(params) {
+  const res = await fetch(
+    getUrl(`/wp-json/wp/v2/product_cat${buildTaxonomyQuery(params)}`)
+  );
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const json = await res.json();
+  if (!Array.isArray(json)) throw new Error("Invalid response format");
+  return json;
+}
+async function getProductTags(params) {
+  const res = await fetch(
+    getUrl(`/wp-json/wp/v2/product_tag${buildTaxonomyQuery(params)}`)
+  );
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const json = await res.json();
+  if (!Array.isArray(json)) throw new Error("Invalid response format");
+  return json;
+}
+async function getProductCategoryById(id) {
+  const res = await fetch(getUrl(`/wp-json/wp/v2/product_cat/${id}`));
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  return await res.json();
+}
+async function getProductCategoryBySlug(slug) {
+  const res = await fetch(getUrl(`/wp-json/wp/v2/product_cat`, { slug }));
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const list = await res.json();
+  return list[0];
+}
+async function getProductTagById(id) {
+  const res = await fetch(getUrl(`/wp-json/wp/v2/product_tag/${id}`));
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  return await res.json();
+}
+async function getProductTagBySlug(slug) {
+  const res = await fetch(getUrl(`/wp-json/wp/v2/product_tag`, { slug }));
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const list = await res.json();
+  return list[0];
+}
+
+// src/utils/better-fetch.ts
 var APP_NAME = "HeadlessWC";
 function isDevEnvironment() {
-  var _a, _b;
   if (typeof window !== "undefined") {
-    const hostname = (_a = window.location) == null ? void 0 : _a.hostname;
-    return hostname === "localhost" || hostname === "127.0.0.1" || (hostname == null ? void 0 : hostname.includes("localhost")) || ((_b = window.location) == null ? void 0 : _b.port) === "3000";
+    const hostname = window.location?.hostname;
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname?.includes("localhost") || window.location?.port === "3000";
   }
   return process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "development" || !process.env.NODE_ENV;
 }
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+function withTimeout(promise, ms) {
+  if (!ms) return promise;
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error("Request timeout")), ms);
+    promise.then((v) => {
+      clearTimeout(id);
+      resolve(v);
+    }).catch((e) => {
+      clearTimeout(id);
+      reject(e);
+    });
+  });
+}
+function backoffDelay(attempt, base, max) {
+  const exp = base * Math.pow(2, attempt);
+  return Math.min(max, exp);
+}
+function shouldRetry(status, allowed) {
+  return allowed.includes(status);
+}
+async function executeWithRetry(attempt, ctx) {
+  const { retries, fetcher, onDelay, computeDelay, retryOnStatus } = ctx;
+  try {
+    const response = await fetcher();
+    if (response.ok) return response;
+    if (!shouldRetry(response.status, retryOnStatus) || attempt === retries) {
+      return response;
+    }
+    const delay = computeDelay(attempt);
+    onDelay(delay);
+    await sleep(delay);
+    return executeWithRetry(attempt + 1, ctx);
+  } catch (err) {
+    if (attempt === retries) throw err;
+    const delay = computeDelay(attempt);
+    onDelay(delay);
+    await sleep(delay);
+    return executeWithRetry(attempt + 1, ctx);
+  }
+}
 async function betterFetch(url, options = {}) {
-  const { retries = 3, retryDelay = 1e3, ...fetchOptions } = options;
+  const {
+    retries = 3,
+    retryBaseDelayMs = 300,
+    retryMaxDelayMs = 3e3,
+    timeoutMs = 1e4,
+    retryOnStatus = [408, 429, 500, 502, 503, 504],
+    ...fetchOptions
+  } = options;
   const isDev = isDevEnvironment();
   if (!fetchOptions.cache) {
     fetchOptions.cache = isDev ? "no-store" : "default";
   }
-  let lastError;
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const response = await fetch(url, fetchOptions);
-      if (response.ok) {
-        return response;
-      }
-      let responseBody = "[Could not read response]";
-      try {
-        const clone = response.clone();
-        const text = await clone.text();
-        responseBody = text ? JSON.parse(text) : text;
-      } catch {
-      }
-      lastError = new Error(`HTTP error! status: ${response.status}`);
-      if (attempt === retries && isDev) {
-        console.error(`[${APP_NAME}] \u{1F6A8} Request failed:`, {
-          url,
-          method: fetchOptions.method || "GET",
-          status: response.status,
-          statusText: response.statusText,
-          responseBody,
-          attempts: retries
-        });
-      }
-      if (attempt === retries) {
-        return response;
-      }
+  const computeDelay = (attempt) => backoffDelay(attempt, retryBaseDelayMs, retryMaxDelayMs);
+  const response = await executeWithRetry(0, {
+    retries,
+    fetcher: () => withTimeout(fetch(url, fetchOptions), timeoutMs),
+    onDelay: (ms) => {
       if (isDev) {
-        console.warn(
-          `[${APP_NAME}] \u23F3 HTTP ${response.status} - Retry ${attempt + 1}/${retries}`
-        );
+        console.error(`[${APP_NAME}] retry in ${ms}ms`);
       }
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (attempt === retries && isDev) {
-        console.error(`[${APP_NAME}] \u{1F6A8} Network error:`, {
-          url,
-          method: fetchOptions.method || "GET",
-          error: lastError.message,
-          attempts: retries
-        });
-      }
-      if (attempt === retries) {
-        throw lastError;
-      }
-      if (isDev) {
-        console.warn(
-          `[${APP_NAME}] \u23F3 Network error - Retry ${attempt + 1}/${retries}`
-        );
-      }
-    }
-    if (attempt < retries) {
-      await new Promise((resolve) => setTimeout(resolve, retryDelay));
-    }
-  }
-  throw lastError;
+    },
+    computeDelay,
+    retryOnStatus
+  });
+  return response;
 }
 
-// src/api/createCart.ts
+// src/api/woocommerce.ts
 async function createCart(url, products, couponCode = "", customFields) {
-  try {
-    const res = await betterFetch(`${url}/wp-json/headless-wc/v1/cart`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-cache",
-      body: JSON.stringify({ cart: products, couponCode, customFields })
-    });
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const json = await res.json();
-    if (json.success === false) {
-      return json;
-    }
-    return { success: true, data: json };
-  } catch (error) {
-    return {
-      success: false,
-      message: "Network or HTTP error occurred",
-      error: "internal"
-    };
-  }
+  const res = await betterFetch(`${url}/wp-json/headless-wc/v1/cart`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-cache",
+    body: JSON.stringify({ cart: products, couponCode, customFields })
+  });
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const json = await res.json();
+  if (json.success === false) return json;
+  return { success: true, data: json };
 }
-
-// src/api/createOrder.ts
 async function createOrder(url, props) {
-  try {
-    const res = await betterFetch(`${url}/wp-json/headless-wc/v1/order`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        cart: props.cartItems,
-        couponCode: props.couponCode ?? "",
-        shippingMethodId: props.shippingMethodId,
-        paymentMethodId: props.paymentMethodId,
-        redirectUrl: props.redirectURL ?? "",
-        useDifferentShipping: false,
-        billingFirstName: props.billingData.firstName,
-        billingLastName: props.billingData.lastName,
-        billingAddress1: props.billingData.address1,
-        billingAddress2: props.billingData.address2 ?? "",
-        billingCity: props.billingData.city,
-        billingState: props.billingData.state,
-        billingPostcode: props.billingData.postcode,
-        billingCountry: props.billingData.country,
-        billingPhone: props.billingData.phone,
-        billingEmail: props.billingData.email,
-        billingCompany: props.billingData.company,
-        customFields: props.customFields
-      })
-    });
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const json = await res.json();
-    if (json.success === false) {
-      return json;
-    }
-    return { success: true, data: json };
-  } catch (error) {
-    return {
-      success: false,
-      message: "Network or HTTP error occurred",
-      error: "internal"
-    };
-  }
+  const res = await betterFetch(`${url}/wp-json/headless-wc/v1/order`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      cart: props.cartItems,
+      couponCode: props.couponCode ?? "",
+      shippingMethodId: props.shippingMethodId,
+      paymentMethodId: props.paymentMethodId,
+      redirectUrl: props.redirectURL ?? "",
+      useDifferentShipping: false,
+      billingFirstName: props.billingData.firstName,
+      billingLastName: props.billingData.lastName,
+      billingAddress1: props.billingData.address1,
+      billingAddress2: props.billingData.address2 ?? "",
+      billingCity: props.billingData.city,
+      billingState: props.billingData.state,
+      billingPostcode: props.billingData.postcode,
+      billingCountry: props.billingData.country,
+      billingPhone: props.billingData.phone,
+      billingEmail: props.billingData.email,
+      billingCompany: props.billingData.company,
+      customFields: props.customFields
+    })
+  });
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const json = await res.json();
+  if (json.success === false) return json;
+  return { success: true, data: json };
 }
-
-// src/classes/Cart.ts
-var HWCCart = class _HWCCart {
-  total;
-  url;
-  products;
-  subtotal;
-  taxTotal;
-  discountTotal;
-  shippingTotal;
-  couponCode;
-  currency;
-  shippingMethods;
-  paymentMethods;
-  customFields;
-  constructor(props) {
-    Object.assign(this, props);
-  }
-  get cartItems() {
-    return this.products.map((product) => {
-      return {
-        id: product.id,
-        quantity: product.quantity
-      };
-    });
-  }
-  cloneWithUpdates(updates) {
-    const updatedCart = new _HWCCart({ ...this, ...updates });
-    updatedCart.total = updatedCart.subtotal + updatedCart.shippingTotal - updatedCart.discountTotal;
-    return updatedCart;
-  }
-  static async create(url, cartItems = [], customFields) {
-    const cart = await createCart(url, cartItems, "", customFields);
-    if (cart.success === false) {
-      throw new Error(cart.message);
-    }
-    return new _HWCCart({ ...cart.data, url });
-  }
-  async revalidateWithServer() {
-    const fetchCart = await createCart(
-      this.url,
-      this.cartItems,
-      this.couponCode,
-      this.customFields
-    );
-    if (fetchCart.success === false) {
-      throw new Error(fetchCart.message);
-    }
-    return new _HWCCart({ url: this.url, ...fetchCart.data });
-  }
-  changeShippingMethod(shippingMethodId) {
-    const shippingMethod = this.shippingMethods.find(
-      (item) => item.id === shippingMethodId
-    );
-    if (!shippingMethod)
-      throw new Error("Provided shippingMethodId is invalid");
-    return this.cloneWithUpdates({
-      shippingTotal: shippingMethod.price
-    });
-  }
-  changeQty(productId, newQuantity) {
-    const updatedProducts = this.products.map((product) => {
-      if (product.id === productId) {
-        const newTotal = parseFloat((newQuantity * product.price).toFixed(2));
-        return { ...product, quantity: newQuantity, total: newTotal };
-      }
-      return product;
-    });
-    const priceDifference = updatedProducts.reduce((acc, product) => {
-      const originalProduct = this.products.find((p) => p.id === product.id);
-      if (originalProduct) {
-        return acc + (product.total - originalProduct.total);
-      }
-      return acc;
-    }, 0);
-    const currentSubtotal = typeof this.subtotal === "number" ? this.subtotal : parseFloat(this.subtotal);
-    const newSubtotal = parseFloat(
-      (currentSubtotal + priceDifference).toFixed(2)
-    );
-    return this.cloneWithUpdates({
-      products: updatedProducts,
-      subtotal: newSubtotal
-    });
-  }
-  addProduct(product) {
-    const existingCartItem = this.cartItems.find(
-      (cartItem) => cartItem.id === product.id
-    );
-    if (existingCartItem) {
-      return this.changeQty(product.id, 1 + existingCartItem.quantity);
-    }
-    const cartProduct = {
-      quantity: 1,
-      tax: 0,
-      variation: null,
-      total: product.price,
-      variationId: "variationId" in product ? product.variationId : null,
-      ...product
-    };
-    return this.cloneWithUpdates({
-      products: [...this.products, cartProduct],
-      subtotal: this.subtotal + product.price
-    });
-  }
-  async addProductById(cartItem) {
-    const existingCartItem = this.cartItems.find(
-      (item) => item.id === cartItem.id
-    );
-    if (existingCartItem) {
-      return this.changeQty(
-        cartItem.id,
-        cartItem.quantity + existingCartItem.quantity
-      );
-    }
-    const fetchCart = await createCart(
-      this.url,
-      [...this.cartItems, cartItem],
-      this.couponCode,
-      this.customFields
-    );
-    if (fetchCart.success === false) {
-      throw new Error(fetchCart.message);
-    }
-    return new _HWCCart({ url: this.url, ...fetchCart.data });
-  }
-  async addProductBySlug(cartItem) {
-    const fetchCart = await createCart(
-      this.url,
-      [...this.cartItems, cartItem],
-      this.couponCode,
-      this.customFields
-    );
-    if (fetchCart.success === false) {
-      throw new Error(fetchCart.message);
-    }
-    return new _HWCCart({ url: this.url, ...fetchCart.data });
-  }
-  removeProduct(product) {
-    const newProducts = this.products.filter((item) => item.id !== product.id);
-    return this.cloneWithUpdates({
-      products: newProducts
-    });
-  }
-  async removeProductById(productId) {
-    const newCartItems = this.cartItems.filter((item) => item.id !== productId);
-    if (newCartItems.length === this.cartItems.length) {
-      return this;
-    }
-    const fetchCart = await createCart(
-      this.url,
-      newCartItems,
-      this.couponCode,
-      this.customFields
-    );
-    if (fetchCart.success === false) {
-      throw new Error(fetchCart.message);
-    }
-    return new _HWCCart({ url: this.url, ...fetchCart.data });
-  }
-  async addCouponCode(couponCode) {
-    if (this.couponCode == couponCode && couponCode != "") {
-      throw new Error("You already using this coupon code");
-    }
-    const fetchCart = await createCart(
-      this.url,
-      this.cartItems,
-      couponCode,
-      this.customFields
-    );
-    if (fetchCart.success === false) {
-      throw new Error(fetchCart.message);
-    }
-    const newCart = new _HWCCart({
-      url: this.url,
-      ...fetchCart.data
-    });
-    if (newCart.couponCode !== couponCode) {
-      return void 0;
-    }
-    return newCart;
-  }
-  async removeCouponCode() {
-    return await this.addCouponCode("");
-  }
-  async updateCustomFields(customFields) {
-    const mergedCustomFields = {
-      ...this.customFields,
-      ...customFields
-    };
-    const fetchCart = await createCart(
-      this.url,
-      this.cartItems,
-      this.couponCode,
-      mergedCustomFields
-    );
-    if (fetchCart.success === false) {
-      throw new Error(fetchCart.message);
-    }
-    return new _HWCCart({ url: this.url, ...fetchCart.data });
-  }
-  async submitOrder(props) {
-    const mergedCustomFields = {
-      ...this.customFields,
-      ...props.customFields
-    };
-    const result = await createOrder(this.url, {
-      cartItems: this.cartItems,
-      couponCode: this.couponCode,
-      ...props,
-      customFields: mergedCustomFields
-    });
-    if (result.success === false) {
-      throw new Error(result.message);
-    }
-    return result.data;
-  }
-};
-
-// src/api/getProduct.ts
-async function getProduct(url, idOrSlug) {
-  try {
-    const res = await betterFetch(
-      `${url}/wp-json/headless-wc/v1/products/${idOrSlug}`
-    );
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const json = await res.json();
-    if (json.success === false) {
-      return json;
-    }
-    return { success: true, data: json };
-  } catch (error) {
-    return {
-      success: false,
-      message: "Network or HTTP error occurred",
-      error: "internal"
-    };
-  }
-}
-
-// src/api/getProducts.ts
-async function getProducts(url) {
-  try {
-    const res = await betterFetch(`${url}/wp-json/headless-wc/v1/products`);
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const json = await res.json();
-    if (json.success === false) {
-      return json;
-    }
-    return { success: true, data: json };
-  } catch (error) {
-    return {
-      success: false,
-      message: "Network or HTTP error occurred",
-      error: "internal"
-    };
-  }
-}
-
-// src/api/getOrderDetails.ts
 async function getOrderDetails(url, orderId, orderKey) {
-  try {
-    const res = await betterFetch(
-      `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
-        orderKey
-      )}`
-    );
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const json = await res.json();
-    if (json.success === false) {
-      return json;
+  const res = await betterFetch(
+    `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
+      orderKey
+    )}`
+  );
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const json = await res.json();
+  if (json.success === false) return json;
+  return { success: true, data: json };
+}
+async function getProduct(url, idOrSlug) {
+  const res = await betterFetch(
+    `${url}/wp-json/headless-wc/v1/products/${idOrSlug}`
+  );
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const json = await res.json();
+  if (json.success === false) return json;
+  return { success: true, data: json };
+}
+function buildProductsUrl(url, params) {
+  const base = `${url}/wp-json/headless-wc/v1/products`;
+  if (!params) return base;
+  const qs = new URLSearchParams();
+  const pairs = [
+    ["search", params.search],
+    ["category", params.category],
+    ["page", params.page !== void 0 ? String(params.page) : void 0],
+    [
+      "perPage",
+      params.perPage !== void 0 ? String(params.perPage) : void 0
+    ],
+    ["sort", params.sort],
+    ["order", params.order]
+  ];
+  for (const [k, v] of pairs) {
+    if (v !== void 0) qs.set(k, v);
+  }
+  const s = qs.toString();
+  return s ? `${base}?${s}` : base;
+}
+async function getProducts(url, params) {
+  const res = await betterFetch(buildProductsUrl(url, params));
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const json = await res.json();
+  if (json.success === false) return json;
+  const items = Array.isArray(json.data) ? json.data : [];
+  return { success: true, data: items };
+}
+
+// src/core/add-to-cart.ts
+async function addToCart(cartItems, input) {
+  const url = getBaseUrl();
+  const item = "id" in input ? { id: input.id, quantity: input.quantity ?? 1 } : { slug: input.slug, quantity: input.quantity ?? 1 };
+  const res = await createCart(
+    url,
+    [...cartItems, item],
+    "",
+    void 0
+  );
+  if (res.success === false) {
+    throw new Error(res.message);
+  }
+  return res.data;
+}
+
+// src/core/apply-coupon.ts
+async function applyCoupon(cartItems, code) {
+  const url = getBaseUrl();
+  const res = await createCart(
+    url,
+    cartItems,
+    code,
+    void 0
+  );
+  if (res.success === false) throw new Error(res.message);
+  return res.data;
+}
+async function removeCoupon(cartItems) {
+  return applyCoupon(cartItems, "");
+}
+
+// src/core/create-order.ts
+async function createOrder2(args) {
+  const url = getBaseUrl();
+  const res = await createOrder(url, args);
+  if (res.success === false) {
+    throw new Error(res.message);
+  }
+  return res.data;
+}
+
+// src/core/get-cart.ts
+async function getCart(cartItems) {
+  const url = getBaseUrl();
+  const res = await createCart(
+    url,
+    cartItems,
+    "",
+    void 0
+  );
+  if (res.success === false) {
+    throw new Error(res.message);
+  }
+  return res.data;
+}
+var createCart2 = getCart;
+
+// src/core/get-order-details.ts
+async function getOrderDetails2(orderId, orderKey) {
+  const url = getBaseUrl();
+  const res = await getOrderDetails(
+    url,
+    orderId,
+    orderKey
+  );
+  if (res.success === false) {
+    throw new Error(res.message);
+  }
+  return res.data;
+}
+
+// src/core/get-product.ts
+async function getProduct2(idOrSlug) {
+  const url = getBaseUrl();
+  const res = await getProduct(
+    url,
+    idOrSlug
+  );
+  if (res.success === false) {
+    throw new Error(res.message);
+  }
+  return res.data;
+}
+
+// src/core/get-products.ts
+async function getProducts2(params) {
+  const url = getBaseUrl();
+  const res = await getProducts(url, params);
+  if (res.success === false) {
+    throw new Error(res.message);
+  }
+  return res.data;
+}
+
+// src/core/remove-from-cart.ts
+async function removeFromCart(cartItems, idOrSlug) {
+  const url = getBaseUrl();
+  const next = cartItems.filter((item) => {
+    if (typeof idOrSlug === "number") {
+      return !("id" in item && item.id === idOrSlug);
     }
-    return { success: true, data: json };
-  } catch (error) {
+    return !("slug" in item && item.slug === idOrSlug);
+  });
+  const res = await createCart(
+    url,
+    next,
+    "",
+    void 0
+  );
+  if (res.success === false) throw new Error(res.message);
+  return res.data;
+}
+
+// src/core/revalidate-cart.ts
+async function revalidateCart(cartItems) {
+  const url = getBaseUrl();
+  const res = await createCart(
+    url,
+    cartItems,
+    "",
+    void 0
+  );
+  if (res.success === false) throw new Error(res.message);
+  return res.data;
+}
+
+// src/core/update-cart.ts
+async function updateCart(cartItems, changes) {
+  const url = getBaseUrl();
+  const byId = /* @__PURE__ */ new Map();
+  const bySlug = /* @__PURE__ */ new Map();
+  for (const c of changes) {
+    if ("id" in c) byId.set(c.id, c.quantity);
+    else bySlug.set(c.slug, c.quantity);
+  }
+  const next = cartItems.map((item) => {
+    if ("id" in item) {
+      const q2 = byId.get(item.id) ?? item.quantity;
+      return { id: item.id, quantity: q2 };
+    }
+    const q = bySlug.get(item.slug) ?? item.quantity;
+    return { slug: item.slug, quantity: q };
+  });
+  const res = await createCart(
+    url,
+    next,
+    "",
+    void 0
+  );
+  if (res.success === false) throw new Error(res.message);
+  return res.data;
+}
+
+// src/core/update-cart-item.ts
+async function updateCartItem(cartItems, change) {
+  const url = getBaseUrl();
+  const next = cartItems.map((item) => {
+    if ("id" in item && change.id !== void 0 && item.id === change.id) {
+      return { id: item.id, quantity: change.quantity };
+    }
+    if ("slug" in item && change.slug !== void 0 && item.slug === change.slug) {
+      return { slug: item.slug, quantity: change.quantity };
+    }
+    return item;
+  });
+  const res = await createCart(
+    url,
+    next,
+    "",
+    void 0
+  );
+  if (res.success === false) throw new Error(res.message);
+  return res.data;
+}
+
+// src/core/variants-normalize-selection.ts
+function canonicalizeKey(key) {
+  return key.trim().toLowerCase();
+}
+function buildAttributeKeyMap(attributes) {
+  const map = {};
+  for (const attr of attributes) {
+    map[canonicalizeKey(attr.name)] = attr.name;
+  }
+  return map;
+}
+function normalizeSelection(product, selection) {
+  if (product.type !== "variable") return {};
+  const keyMap = buildAttributeKeyMap(product.attributes);
+  const normalized = {};
+  for (const [k, v] of Object.entries(selection)) {
+    const canonical = canonicalizeKey(k);
+    const original = keyMap[canonical] ?? k;
+    normalized[original] = v;
+  }
+  return normalized;
+}
+
+// src/core/variants-getters.ts
+function getVariantMatch(product, selection) {
+  if (product.type !== "variable") return null;
+  const normalized = normalizeSelection(product, selection);
+  const match = product.variations.find(
+    (v) => Object.entries(normalized).every(
+      ([name, value]) => v.attributeValues[name] === value
+    )
+  );
+  return match?.variation ?? null;
+}
+function getInitialSelection(product) {
+  if (product.type !== "variable") return {};
+  if (product.variationId) {
+    const found = product.variations.find(
+      (v) => v.variation.id === product.variationId
+    );
+    if (found) return { ...found.attributeValues };
+  }
+  return {
+    ...product.variations[0]?.attributeValues ?? {}
+  };
+}
+
+// src/core/variants-options.ts
+function getAvailableOptions(product, partialSelection) {
+  if (product.type !== "variable") return {};
+  const normalized = normalizeSelection(product, partialSelection);
+  const result = {};
+  for (const attr of product.attributes) {
+    const name = attr.name;
+    const values = attr.values.map((v) => v.name);
+    const options = values.map((value) => {
+      const candidate = { ...normalized, [name]: value };
+      const available = product.variations.some(
+        (v) => Object.entries(candidate).every(
+          ([n, val]) => v.attributeValues[n] === val
+        )
+      );
+      const selected = normalized[name] === value;
+      return { value, available, selected };
+    });
+    result[name] = options;
+  }
+  return result;
+}
+
+// src/core/variants-update.ts
+function updateSelection(product, currentSelection, changedName, changedValue) {
+  if (product.type !== "variable") {
     return {
-      success: false,
-      message: "Network or HTTP error occurred",
-      error: "internal"
+      selection: {},
+      variation: null,
+      productView: product
+    };
+  }
+  const normalized = normalizeSelection(product, currentSelection);
+  const selection = {
+    ...normalized,
+    [changedName]: changedValue
+  };
+  const variation = getVariantMatch(product, selection);
+  if (!variation) {
+    return { selection, variation: null, productView: product };
+  }
+  const productView = {
+    ...product,
+    isOnSale: variation.isOnSale,
+    isVirtual: variation.isVirtual,
+    isFeatured: variation.isFeatured,
+    isSoldIndividually: variation.isSoldIndividually,
+    image: variation.image,
+    id: variation.id,
+    name: variation.name,
+    stockQuantity: variation.stockQuantity,
+    stockStatus: variation.stockStatus,
+    slug: variation.slug,
+    permalink: variation.permalink,
+    currency: variation.currency,
+    price: variation.price,
+    regularPrice: variation.regularPrice,
+    salePrice: variation.salePrice,
+    saleStartDatetime: variation.saleStartDatetime,
+    saleEndDatetime: variation.saleEndDatetime,
+    sku: variation.sku,
+    globalUniqueId: variation.globalUniqueId,
+    content: variation.content,
+    variationId: variation.id
+  };
+  return { selection, variation, productView };
+}
+function getVariantState(product, selection) {
+  if (product.type !== "variable") {
+    return {
+      selection: {},
+      variation: null,
+      productView: product,
+      options: {}
+    };
+  }
+  const effective = selection && Object.keys(selection).length > 0 ? normalizeSelection(product, selection) : product.variations[0]?.attributeValues ?? {};
+  const variation = getVariantMatch(product, effective);
+  const options = getAvailableOptions(product, effective);
+  return {
+    selection: effective,
+    variation,
+    productView: product,
+    options
+  };
+}
+function changeVariant(product, state, name, value) {
+  if (product.type !== "variable") {
+    return {
+      selection: {},
+      variation: null,
+      productView: product,
+      options: {}
+    };
+  }
+  const { selection, variation, productView } = updateSelection(
+    product,
+    state.selection,
+    name,
+    value
+  );
+  const options = getAvailableOptions(product, selection);
+  return { selection, variation, productView, options };
+}
+
+// src/next/index.ts
+async function getNextCache() {
+  try {
+    const mod = await import("next/cache");
+    return {
+      cacheLife: mod.unstable_cacheLife,
+      cacheTag: mod.unstable_cacheTag,
+      revalidateTag: mod.revalidateTag
+    };
+  } catch {
+    return {
+      cacheLife: void 0,
+      cacheTag: void 0,
+      revalidateTag: void 0
     };
   }
 }
-
-// src/HeadlessWC.ts
-var HeadlessWC = class {
-  url;
-  cartInstancePromise = void 0;
-  constructor(url) {
-    this.url = url;
+async function revalidateProducts() {
+  const { revalidateTag } = await getNextCache();
+  if (revalidateTag) revalidateTag("hwc:products");
+}
+async function revalidatePages() {
+  const { revalidateTag } = await getNextCache();
+  if (revalidateTag) revalidateTag("hwc:pages");
+}
+async function revalidateNextjsCache() {
+  const { revalidateTag } = await getNextCache();
+  if (revalidateTag) {
+    revalidateTag("hwc:products");
+    revalidateTag("hwc:pages");
   }
-  async createCart(items = [], customFields) {
-    try {
-      if (!this.cartInstancePromise) {
-        this.cartInstancePromise = HWCCart.create(
-          this.url,
-          items,
-          customFields
-        );
-      }
-      return await this.cartInstancePromise;
-    } catch (error) {
-      return {
-        success: false,
-        message: "Failed to create cart",
-        error: "internal"
-      };
-    }
-  }
-  async getProducts() {
-    return await getProducts(this.url);
-  }
-  async getProductById(id) {
-    return await getProduct(this.url, id);
-  }
-  async getProductBySlug(slug) {
-    return await getProduct(this.url, slug);
-  }
-  async getOrderDetails(orderId, orderKey) {
-    return await getOrderDetails(this.url, orderId, orderKey);
-  }
-  async createOrder(items, props) {
-    return await createOrder(this.url, {
-      cartItems: items,
-      ...props
-    });
-  }
-  static selectProductVariation(product, attributeValues) {
-    var _a;
-    if (product.type !== "variable")
-      throw new Error("Cannot select variation for non-variable product");
-    const variation = (_a = product.variations.find(
-      (variation2) => Object.entries(attributeValues).every(
-        ([key, value]) => variation2.attributeValues[key] === value
-      )
-    )) == null ? void 0 : _a.variation;
-    if (!variation) return product;
-    return {
-      ...product,
-      isOnSale: variation.isOnSale,
-      isVirtual: variation.isVirtual,
-      isFeatured: variation.isFeatured,
-      isSoldIndividually: variation.isSoldIndividually,
-      image: variation.image,
-      id: variation.id,
-      name: variation.name,
-      stockQuantity: variation.stockQuantity,
-      stockStatus: variation.stockStatus,
-      slug: variation.slug,
-      permalink: variation.permalink,
-      currency: variation.currency,
-      price: variation.price,
-      regularPrice: variation.regularPrice,
-      salePrice: variation.salePrice,
-      saleStartDatetime: variation.saleStartDatetime,
-      saleEndDatetime: variation.saleEndDatetime,
-      sku: variation.sku,
-      globalUniqueId: variation.globalUniqueId,
-      content: variation.content
-    };
-  }
-};
-
-// src/index.ts
-var src_default = HeadlessWC;
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  HWCCart,
-  HeadlessWC
+  addToCart,
+  applyCoupon,
+  changeVariant,
+  createCart,
+  createOrder,
+  getAllAuthors,
+  getAllCategories,
+  getAllPages,
+  getAllPosts,
+  getAllTags,
+  getAuthorById,
+  getAuthorBySlug,
+  getAvailableOptions,
+  getBaseUrl,
+  getCart,
+  getCategoryById,
+  getCategoryBySlug,
+  getFeaturedMediaById,
+  getInitialSelection,
+  getOrderDetails,
+  getPageById,
+  getPageBySlug,
+  getPostById,
+  getPostBySlug,
+  getPostsByAuthor,
+  getPostsByAuthorSlug,
+  getPostsByCategory,
+  getPostsByCategorySlug,
+  getPostsByTag,
+  getPostsByTagSlug,
+  getProduct,
+  getProductCategories,
+  getProductCategoryById,
+  getProductCategoryBySlug,
+  getProductTagById,
+  getProductTagBySlug,
+  getProductTags,
+  getProducts,
+  getTagById,
+  getTagBySlug,
+  getTagsByPost,
+  getVariantMatch,
+  getVariantState,
+  normalizeSelection,
+  removeCoupon,
+  removeFromCart,
+  revalidateCart,
+  revalidateNextjsCache,
+  revalidatePages,
+  revalidateProducts,
+  setWooCommerceUrl,
+  updateCart,
+  updateCartItem,
+  updateSelection
 });

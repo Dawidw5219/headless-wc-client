@@ -1,10 +1,9 @@
-import { HWCCartProduct } from "./CartProduct";
-import { HWCPaymentMethod } from "./PaymentMethod";
-import { HWCShippingMethod } from "./ShippingMethod";
+import type { HWCCartItem } from "./cart-product";
+import type { HWCPaymentMethod } from "./payment-method";
+import type { HWCShippingMethod } from "./shipping-method";
 
-// Typ lub interfejs definiujący strukturę danych dla koszyka
-export type HWCCartType = {
-  products: HWCCartProduct[];
+export type HWCCart = {
+  products: HWCCartItem[];
   total: number;
   subtotal: number;
   taxTotal: number;
@@ -14,5 +13,5 @@ export type HWCCartType = {
   currency: string;
   shippingMethods: HWCShippingMethod[];
   paymentMethods: HWCPaymentMethod[];
-  customFields?: { [key: string]: any };
+  customFields?: Record<string, unknown>;
 };

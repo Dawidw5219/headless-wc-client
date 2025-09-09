@@ -11,16 +11,12 @@ type HWCAttributeBase = {
 
 type HWCColorAttribute = HWCAttributeBase & {
   type: "color";
-  values: (HWCAttributeValue & {
-    color: string;
-  })[];
+  values: (HWCAttributeValue & { color: string })[];
 };
 
 type HWCImageAttribute = HWCAttributeBase & {
   type: "image";
-  values: (HWCAttributeValue & {
-    imageUrl: string;
-  })[];
+  values: (HWCAttributeValue & { imageUrl: string })[];
 };
 
 type HWCSelectAttribute = HWCAttributeBase & {
@@ -28,4 +24,7 @@ type HWCSelectAttribute = HWCAttributeBase & {
   values: HWCAttributeValue[];
 };
 
-export type HWCAttribute = HWCColorAttribute | HWCImageAttribute | HWCSelectAttribute;
+export type HWCAttribute =
+  | HWCColorAttribute
+  | HWCImageAttribute
+  | HWCSelectAttribute;

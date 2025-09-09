@@ -1,5 +1,5 @@
-import { HWCImage } from "./Image";
-import { HWCProductBase, HWCSimpleProduct, HWCVariation } from "./Product";
+import type { HWCImage } from "./image";
+import type { HWCSimpleProduct, HWCVariation } from "./product";
 
 type HWCSimpleProductDetailed = HWCSimpleProduct & {
   type: "simple" | "grouped" | "external";
@@ -29,4 +29,6 @@ type HWCVariableProductDetailed = Omit<HWCSimpleProductDetailed, "type"> & {
   }[];
 };
 
-export type HWCProductDetailed = HWCSimpleProductDetailed | HWCVariableProductDetailed;
+export type HWCProductDetailed =
+  | HWCSimpleProductDetailed
+  | HWCVariableProductDetailed;

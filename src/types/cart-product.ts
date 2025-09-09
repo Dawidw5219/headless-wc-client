@@ -1,6 +1,6 @@
-import { HWCProductBase } from "./Product";
+import type { HWCProductBase } from "./product";
 
-export type HWCCartProduct = HWCProductBase & {
+export type HWCCartItem = HWCProductBase & {
   variationId: number | null;
   variation: { [key: string]: string } | null;
   quantity: number;

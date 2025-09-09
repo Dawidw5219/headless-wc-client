@@ -1,6 +1,6 @@
 {
   "name": "headless-wc-client",
-  "version": "1.0.14",
+  "version": "1.1.0",
   "description": "WooCommerce Headless Solution",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -10,6 +10,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./next": {
+      "types": "./dist/next.d.ts",
+      "import": "./dist/next.mjs",
+      "require": "./dist/next.js"
     }
   },
   "files": [
@@ -19,7 +24,9 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "git": "git add . && git commit -m 'update' && git push origin main",
-    "deploy": "npm run build && npm publish && npm run git"
+    "deploy": "npm run build && npm publish && npm run git",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix"
   },
   "repository": {
     "type": "git",
@@ -41,8 +48,20 @@
     "url": "https://github.com/Dawidw5219/headless-wc-client/issues"
   },
   "homepage": "https://github.com/Dawidw5219/headless-wc-client#readme",
+  "peerDependencies": {
+    "next": ">=14.0.0"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/node": "^22.5.5",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "eslint": "^9.35.0",
+    "eslint-plugin-sonarjs": "^3.0.5",
     "tsup": "^8.0.2",
     "typedoc": "^0.25.9",
     "typescript": "^5.3.3"

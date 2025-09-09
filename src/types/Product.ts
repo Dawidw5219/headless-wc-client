@@ -1,5 +1,5 @@
-import { HWCAttribute } from "./Attribute";
-import { HWCImage } from "./Image";
+import type { HWCAttribute } from "./attribute";
+import type { HWCImage } from "./image";
 
 export type HWCProductBase = {
   id: number;

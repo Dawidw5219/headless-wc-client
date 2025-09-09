@@ -1,3 +1,178 @@
+interface HWCTaxonomyTermBase {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string;
+    parent?: number;
+    count?: number;
+    link?: string;
+    meta?: any[];
+}
+type WPTerm<TTaxonomy extends string> = HWCTaxonomyTermBase & {
+    taxonomy: TTaxonomy;
+};
+type HWCProductCategory = HWCTaxonomyTermBase & {
+    taxonomy: "product_cat";
+};
+type HWCProductTag = HWCTaxonomyTermBase & {
+    taxonomy: "product_tag";
+};
+interface HWCTaxonomyQuery {
+    search?: string;
+    page?: number;
+    perPage?: number;
+    parent?: number;
+    hideEmpty?: boolean;
+}
+type WPPost = {
+    id: number;
+    date: string;
+    date_gmt: string;
+    guid: {
+        rendered: string;
+    };
+    modified: string;
+    modified_gmt: string;
+    slug: string;
+    status: "publish" | "future" | "draft" | "pending" | "private";
+    type: string;
+    link: string;
+    title: {
+        rendered: string;
+    };
+    content: {
+        rendered: string;
+        protected: boolean;
+    };
+    excerpt: {
+        rendered: string;
+        protected: boolean;
+    };
+    author: number;
+    featured_media: number;
+    comment_status: "open" | "closed";
+    ping_status: "open" | "closed";
+    sticky: boolean;
+    template: string;
+    format: "standard" | "aside" | "chat" | "gallery" | "link" | "image" | "quote" | "status" | "video" | "audio";
+    meta: any[];
+    categories: number[];
+    tags: number[];
+};
+type WPCategory = WPTerm<"category">;
+type WPTag = WPTerm<"post_tag">;
+type WPPage = {
+    id: number;
+    date: string;
+    date_gmt: string;
+    guid: {
+        rendered: string;
+    };
+    modified: string;
+    modified_gmt: string;
+    slug: string;
+    status: "publish" | "future" | "draft" | "pending" | "private";
+    type: string;
+    link: string;
+    title: {
+        rendered: string;
+    };
+    content: {
+        rendered: string;
+        protected: boolean;
+    };
+    excerpt: {
+        rendered: string;
+        protected: boolean;
+    };
+    author: number;
+    featured_media: number;
+    parent: number;
+    menu_order: number;
+    comment_status: "open" | "closed";
+    ping_status: "open" | "closed";
+    template: string;
+    meta: any[];
+};
+type WPAuthor = {
+    id: number;
+    name: string;
+    url: string;
+    description: string;
+    link: string;
+    slug: string;
+    avatar_urls: {
+        [key: string]: string;
+    };
+    meta: any[];
+};
+type WPFeaturedMedia = {
+    id: number;
+    date: string;
+    slug: string;
+    type: string;
+    link: string;
+    title: {
+        rendered: string;
+    };
+    author: number;
+    caption: {
+        rendered: string;
+    };
+    alt_text: string;
+    media_type: string;
+    mime_type: string;
+    media_details: {
+        width: number;
+        height: number;
+        file: string;
+        sizes: {
+            [key: string]: {
+                file: string;
+                width: number;
+                height: number;
+                mime_type: string;
+                source_url: string;
+            };
+        };
+    };
+    source_url: string;
+};
+
+declare function getAllPosts(filterParams?: {
+    author?: string;
+    tag?: string;
+    category?: string;
+}): Promise<WPPost[]>;
+declare function getPostById(id: number): Promise<WPPost>;
+declare function getPostBySlug(slug: string): Promise<WPPost>;
+declare function getAllCategories(): Promise<WPCategory[]>;
+declare function getCategoryById(id: number): Promise<WPCategory>;
+declare function getCategoryBySlug(slug: string): Promise<WPCategory>;
+declare function getPostsByCategory(categoryId: number): Promise<WPPost[]>;
+declare function getPostsByTag(tagId: number): Promise<WPPost[]>;
+declare function getTagsByPost(postId: number): Promise<WPTag[]>;
+declare function getAllTags(): Promise<WPTag[]>;
+declare function getTagById(id: number): Promise<WPTag>;
+declare function getTagBySlug(slug: string): Promise<WPTag>;
+declare function getAllPages(): Promise<WPPage[]>;
+declare function getPageById(id: number): Promise<WPPage>;
+declare function getPageBySlug(slug: string): Promise<WPPage>;
+declare function getAllAuthors(): Promise<WPAuthor[]>;
+declare function getAuthorById(id: number): Promise<WPAuthor>;
+declare function getAuthorBySlug(slug: string): Promise<WPAuthor>;
+declare function getPostsByAuthor(authorId: number): Promise<WPPost[]>;
+declare function getPostsByAuthorSlug(authorSlug: string): Promise<WPPost[]>;
+declare function getPostsByCategorySlug(categorySlug: string): Promise<WPPost[]>;
+declare function getPostsByTagSlug(tagSlug: string): Promise<WPPost[]>;
+declare function getFeaturedMediaById(url: string, id: number): Promise<WPFeaturedMedia>;
+declare function getProductCategories(params?: HWCTaxonomyQuery): Promise<HWCProductCategory[]>;
+declare function getProductTags(params?: HWCTaxonomyQuery): Promise<HWCProductTag[]>;
+declare function getProductCategoryById(id: number): Promise<HWCProductCategory>;
+declare function getProductCategoryBySlug(slug: string): Promise<HWCProductCategory>;
+declare function getProductTagById(id: number): Promise<HWCProductTag>;
+declare function getProductTagBySlug(slug: string): Promise<HWCProductTag>;
+
 type HWCAttributeValue = {
     id: string;
     name: string;
@@ -85,7 +260,7 @@ type HWCVariableProduct = Omit<HWCSimpleProduct, "type"> & {
 };
 type HWCProduct = HWCSimpleProduct | HWCVariableProduct;
 
-type HWCCartProduct = HWCProductBase & {
+type HWCCartItem = HWCProductBase & {
     variationId: number | null;
     variation: {
         [key: string]: string;
@@ -94,6 +269,60 @@ type HWCCartProduct = HWCProductBase & {
     tax: number;
     total: number;
 };
+
+type HWCPaymentMethod = {
+    id: string;
+    title: string;
+    description: string;
+};
+
+type HWCShippingMethod = {
+    name: string;
+    id: string;
+    price: number;
+    tax: number;
+    zone: string;
+    locations: {
+        type: string;
+        code: string;
+    }[];
+};
+
+type HWCCart = {
+    products: HWCCartItem[];
+    total: number;
+    subtotal: number;
+    taxTotal: number;
+    discountTotal: number;
+    shippingTotal: number;
+    couponCode: string;
+    currency: string;
+    shippingMethods: HWCShippingMethod[];
+    paymentMethods: HWCPaymentMethod[];
+    customFields?: Record<string, unknown>;
+};
+
+type HWCCartItemInput$1 = {
+    id: number;
+    quantity: number;
+} | {
+    slug: string;
+    quantity: number;
+};
+
+declare function addToCart(cartItems: HWCCartItemInput$1[], input: {
+    id: number;
+    quantity?: number;
+} | {
+    slug: string;
+    quantity?: number;
+}): Promise<HWCCart>;
+
+declare function applyCoupon(cartItems: HWCCartItemInput$1[], code: string): Promise<HWCCart>;
+declare function removeCoupon(cartItems: HWCCartItemInput$1[]): Promise<HWCCart>;
+
+declare function setWooCommerceUrl(baseUrl: string): void;
+declare function getBaseUrl(): string;
 
 type HWCCustomerData = {
     firstName: string;
@@ -115,129 +344,27 @@ type HWCOrder = {
     paymentUrl: string;
 };
 
-type HWCPaymentMethod = {
-    id: string;
-    title: string;
-    description: string;
-};
-
-type HWCShippingMethod = {
-    name: string;
-    id: string;
-    price: number;
-    tax: number;
-    zone: string;
-    locations: {
-        type: string;
-        code: string;
-    }[];
-};
-
-type HWCSimpleProductDetailed = HWCSimpleProduct & {
-    type: "simple" | "grouped" | "external";
-    weightUnit: string;
-    dimensionUnit: string;
-    height?: number;
-    length?: number;
-    weight?: number;
-    width?: number;
-    galleryImages: HWCImage[];
-    upsellIds: number[];
-    content?: {
-        rendered: string;
-        plain: string;
-    };
-};
-type HWCVariableProductDetailed = Omit<HWCSimpleProductDetailed, "type"> & {
-    type: "variable";
-    variationId: number | null;
-    variation: null;
-    variationsMinPrice: number;
-    variationsMaxPrice: number;
-    variations: {
-        attributeValues: {
-            [key: string]: string;
-        };
-        variation: HWCVariation;
-    }[];
-};
-type HWCProductDetailed = HWCSimpleProductDetailed | HWCVariableProductDetailed;
-
-type HWCCartType = {
-    products: HWCCartProduct[];
-    total: number;
-    subtotal: number;
-    taxTotal: number;
-    discountTotal: number;
-    shippingTotal: number;
-    couponCode: string;
-    currency: string;
-    shippingMethods: HWCShippingMethod[];
-    paymentMethods: HWCPaymentMethod[];
-    customFields?: {
-        [key: string]: any;
-    };
-};
-
-declare class HWCCart implements HWCCartType {
-    total: number;
-    readonly url: string;
-    readonly products: HWCCartProduct[];
-    readonly subtotal: number;
-    readonly taxTotal: number;
-    readonly discountTotal: number;
-    readonly shippingTotal: number;
-    readonly couponCode: string;
-    readonly currency: string;
-    readonly shippingMethods: HWCShippingMethod[];
-    readonly paymentMethods: HWCPaymentMethod[];
-    readonly customFields?: {
-        [key: string]: any;
-    };
-    private constructor();
-    private get cartItems();
-    private cloneWithUpdates;
-    static create(url: string, cartItems?: ({
+declare function createOrder(args: {
+    cartItems: ({
         id: number;
         quantity: number;
     } | {
         slug: string;
         quantity: number;
-    })[], customFields?: {
+    })[];
+    couponCode?: string;
+    billingData: HWCCustomerData;
+    shippingData?: HWCCustomerData;
+    shippingMethodId?: string;
+    paymentMethodId?: string;
+    redirectURL?: string;
+    customFields?: {
         [key: string]: any;
-    }): Promise<HWCCart>;
-    revalidateWithServer(): Promise<HWCCart>;
-    changeShippingMethod(shippingMethodId: string): HWCCart;
-    changeQty(productId: number, newQuantity: number): HWCCart;
-    addProduct(product: HWCProductDetailed): HWCCart;
-    addProductById(cartItem: {
-        id: number;
-        quantity: number;
-    }): Promise<HWCCart>;
-    addProductBySlug(cartItem: {
-        slug: string;
-        quantity: number;
-    }): Promise<HWCCart>;
-    removeProduct(product: HWCProductDetailed): HWCCart;
-    removeProductById(productId: number): Promise<HWCCart>;
-    addCouponCode(couponCode: string): Promise<HWCCart | undefined>;
-    removeCouponCode(): Promise<HWCCart>;
-    updateCustomFields(customFields: {
-        [key: string]: any;
-    }): Promise<HWCCart>;
-    submitOrder(props: {
-        billingData: HWCCustomerData;
-        shippingData?: HWCCustomerData;
-        shippingMethodId: string;
-        paymentMethodId: string;
-        redirectURL?: string;
-        furgonetkaPoint?: string;
-        furgonetkaPointName?: string;
-        customFields?: {
-            [key: string]: any;
-        };
-    }): Promise<HWCOrder>;
-}
+    };
+}): Promise<HWCOrder>;
+
+declare function getCart(cartItems: HWCCartItemInput$1[]): Promise<HWCCart>;
+declare const createCart: typeof getCart;
 
 type HWCOrderItem = {
     id: number;
@@ -287,6 +414,101 @@ type HWCOrderDetails = {
     };
 };
 
+declare function getOrderDetails(orderId: number, orderKey: string): Promise<HWCOrderDetails>;
+
+type HWCSimpleProductDetailed = HWCSimpleProduct & {
+    type: "simple" | "grouped" | "external";
+    weightUnit: string;
+    dimensionUnit: string;
+    height?: number;
+    length?: number;
+    weight?: number;
+    width?: number;
+    galleryImages: HWCImage[];
+    upsellIds: number[];
+    content?: {
+        rendered: string;
+        plain: string;
+    };
+};
+type HWCVariableProductDetailed = Omit<HWCSimpleProductDetailed, "type"> & {
+    type: "variable";
+    variationId: number | null;
+    variation: null;
+    variationsMinPrice: number;
+    variationsMaxPrice: number;
+    variations: {
+        attributeValues: {
+            [key: string]: string;
+        };
+        variation: HWCVariation;
+    }[];
+};
+type HWCProductDetailed = HWCSimpleProductDetailed | HWCVariableProductDetailed;
+
+declare function getProduct(idOrSlug: number | string): Promise<HWCProductDetailed>;
+
+type HWCProductQuery = {
+    search?: string;
+    category?: string;
+    page?: number;
+    perPage?: number;
+    sort?: string;
+    order?: "asc" | "desc";
+};
+
+declare function getProducts(params?: HWCProductQuery): Promise<HWCProduct[]>;
+
+declare function removeFromCart(cartItems: HWCCartItemInput$1[], idOrSlug: number | string): Promise<HWCCart>;
+
+type HWCCartItemInput = {
+    id: number;
+    quantity: number;
+};
+declare function revalidateCart(cartItems: HWCCartItemInput[]): Promise<HWCCart>;
+
+declare function updateCart(cartItems: HWCCartItemInput$1[], changes: ({
+    id: number;
+    quantity: number;
+} | {
+    slug: string;
+    quantity: number;
+})[]): Promise<HWCCart>;
+
+declare function updateCartItem(cartItems: HWCCartItemInput$1[], change: {
+    id?: number;
+    slug?: string;
+    quantity: number;
+}): Promise<HWCCart>;
+
+type HWCAttributeSelection = Record<string, string>;
+declare function normalizeSelection(product: HWCProductDetailed, selection: HWCAttributeSelection): HWCAttributeSelection;
+
+declare function getVariantMatch(product: HWCProductDetailed, selection: HWCAttributeSelection): HWCVariation | null;
+declare function getInitialSelection(product: HWCProductDetailed): HWCAttributeSelection;
+
+type HWCVariantOption = {
+    value: string;
+    available: boolean;
+    selected: boolean;
+};
+type HWCVariantOptionsMap = Record<string, HWCVariantOption[]>;
+declare function getAvailableOptions(product: HWCProductDetailed, partialSelection: HWCAttributeSelection): HWCVariantOptionsMap;
+
+type HWCVariantState = {
+    selection: HWCAttributeSelection;
+    variation: HWCVariation | null;
+    productView: HWCProductDetailed;
+    options: HWCVariantOptionsMap;
+};
+declare function updateSelection(product: HWCProductDetailed, currentSelection: HWCAttributeSelection, changedName: string, changedValue: string): {
+    selection: HWCAttributeSelection;
+    variation: HWCVariation | null;
+    productView: HWCProductDetailed;
+};
+declare function getVariantState(product: HWCProductDetailed, selection?: HWCAttributeSelection): HWCVariantState;
+declare function changeVariant(product: HWCProductDetailed, state: HWCVariantState, name: string, value: string): HWCVariantState;
+
 type HWCData<T> = {
     success: true;
     data: T;
@@ -298,46 +520,8 @@ type HWCError = {
 };
 type HWCResp<T> = HWCData<T> | HWCError;
 
-declare class HeadlessWC {
-    private url;
-    private cartInstancePromise;
-    constructor(url: string);
-    createCart(items?: ({
-        id: number;
-        quantity: number;
-    } | {
-        slug: string;
-        quantity: number;
-    })[], customFields?: {
-        [key: string]: any;
-    }): Promise<HWCCart | HWCError>;
-    getProducts(): Promise<HWCResp<HWCProduct[]>>;
-    getProductById(id: number): Promise<HWCResp<HWCProductDetailed>>;
-    getProductBySlug(slug: string): Promise<HWCResp<HWCProductDetailed>>;
-    getOrderDetails(orderId: number, orderKey: string): Promise<HWCResp<HWCOrderDetails>>;
-    createOrder(items: ({
-        id: number;
-        quantity: number;
-    } | {
-        slug: string;
-        quantity: number;
-    })[], props: {
-        billingData: HWCCustomerData;
-        shippingData?: HWCCustomerData;
-        shippingMethodId?: string;
-        paymentMethodId?: string;
-        redirectURL?: string;
-        couponCode?: string;
-        customFields?: {
-            [key: string]: any;
-        };
-    }): Promise<HWCResp<HWCOrder>>;
-    static selectProductVariation(product: HWCProductDetailed, attributeValues: {
-        [key: string]: string;
-    }): HWCProductDetailed;
-    static selectProductVariation(product: HWCProductDetailed, attributeValues: {
-        [key: string]: string;
-    }): HWCProductDetailed;
-}
+declare function revalidateProducts(): Promise<void>;
+declare function revalidatePages(): Promise<void>;
+declare function revalidateNextjsCache(): Promise<void>;
 
-export { type HWCAddress, type HWCAttribute, HWCCart, type HWCCartProduct, type HWCCustomerData, type HWCData, type HWCError, type HWCOrder, type HWCOrderDetails, type HWCOrderItem, type HWCProduct, type HWCProductDetailed, type HWCResp, HeadlessWC, HeadlessWC as default };
+export { type HWCCart, type HWCCartItem, type HWCCustomerData, type HWCError, type HWCOrder, type HWCOrderDetails, type HWCProduct, type HWCProductCategory, type HWCProductDetailed, type HWCProductTag, type HWCResp, type HWCTaxonomyQuery, addToCart, applyCoupon, changeVariant, createCart, createOrder, getAllAuthors, getAllCategories, getAllPages, getAllPosts, getAllTags, getAuthorById, getAuthorBySlug, getAvailableOptions, getBaseUrl, getCart, getCategoryById, getCategoryBySlug, getFeaturedMediaById, getInitialSelection, getOrderDetails, getPageById, getPageBySlug, getPostById, getPostBySlug, getPostsByAuthor, getPostsByAuthorSlug, getPostsByCategory, getPostsByCategorySlug, getPostsByTag, getPostsByTagSlug, getProduct, getProductCategories, getProductCategoryById, getProductCategoryBySlug, getProductTagById, getProductTagBySlug, getProductTags, getProducts, getTagById, getTagBySlug, getTagsByPost, getVariantMatch, getVariantState, normalizeSelection, removeCoupon, removeFromCart, revalidateCart, revalidateNextjsCache, revalidatePages, revalidateProducts, setWooCommerceUrl, updateCart, updateCartItem, updateSelection };
