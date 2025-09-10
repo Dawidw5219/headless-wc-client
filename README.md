@@ -28,7 +28,11 @@ return (
         <h3>Name: {product.name}</h3>
         <p>Price: {product.price}</p>
         <h4>Short description:</h4>
-        <div dangerouslySetInnerHTML={{ __html: product.short_description.rendered }} />
+        <div
+          dangerouslySetInnerHTML={{
+            __html: product.shortDescription.rendered,
+          }}
+        />
       </div>
     ))}
   </>

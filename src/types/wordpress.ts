@@ -1,5 +1,4 @@
-// Shared term base and helpers (moved from taxonomy.ts)
-export interface HWCTaxonomyTermBase {
+export interface WPTaxonomyTermBase {
   id: number;
   name: string;
   slug: string;
@@ -10,19 +9,19 @@ export interface HWCTaxonomyTermBase {
   meta?: any[];
 }
 
-export type WPTerm<TTaxonomy extends string> = HWCTaxonomyTermBase & {
+export type WPTerm<TTaxonomy extends string> = WPTaxonomyTermBase & {
   taxonomy: TTaxonomy;
 };
 
-export type HWCProductCategory = HWCTaxonomyTermBase & {
+export type WPProductCategory = Omit<WPCategory, "taxonomy"> & {
   taxonomy: "product_cat";
 };
 
-export type HWCProductTag = HWCTaxonomyTermBase & {
+export type WPProductTag = Omit<WPTag, "taxonomy"> & {
   taxonomy: "product_tag";
 };
 
-export interface HWCTaxonomyQuery {
+export interface WPTaxonomyQuery {
   search?: string;
   page?: number;
   perPage?: number;

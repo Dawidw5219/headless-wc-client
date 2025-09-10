@@ -11,7 +11,14 @@ export {
 } from "./next";
 
 export type {
-  HWCProductCategory,
-  HWCProductTag,
-  HWCTaxonomyQuery,
+  WPProductCategory,
+  WPProductTag,
+  WPTaxonomyQuery,
+  WPTerm,
+  WPAuthor,
+  WPFeaturedMedia,
+  WPPage,
+  WPPost,
+  WPTag,
+  WPCategory,
 } from "./types/wordpress";

@@ -1,8 +1,8 @@
 import { getBaseUrl } from "@/core/config";
 import type {
-  HWCProductCategory,
-  HWCProductTag,
-  HWCTaxonomyQuery,
+  WPProductCategory,
+  WPProductTag,
+  WPTaxonomyQuery,
   WPAuthor,
   WPCategory,
   WPFeaturedMedia,
@@ -69,10 +69,10 @@ export async function getCategoryBySlug(slug: string): Promise<WPCategory> {
 }
 
 export async function getPostsByCategory(
-  categoryId: number,
+  categoryId: number
 ): Promise<WPPost[]> {
   const response = await fetch(
-    getUrl("/wp-json/wp/v2/posts", { categories: categoryId }),
+    getUrl("/wp-json/wp/v2/posts", { categories: categoryId })
   );
   return (await response.json()) as WPPost[];
 }
@@ -139,27 +139,27 @@ export async function getAuthorBySlug(slug: string): Promise<WPAuthor> {
 
 export async function getPostsByAuthor(authorId: number): Promise<WPPost[]> {
   const response = await fetch(
-    getUrl("/wp-json/wp/v2/posts", { author: authorId }),
+    getUrl("/wp-json/wp/v2/posts", { author: authorId })
   );
   return (await response.json()) as WPPost[];
 }
 
 export async function getPostsByAuthorSlug(
-  authorSlug: string,
+  authorSlug: string
 ): Promise<WPPost[]> {
   const author = await getAuthorBySlug(authorSlug);
   const response = await fetch(
-    getUrl("/wp-json/wp/v2/posts", { author: author.id }),
+    getUrl("/wp-json/wp/v2/posts", { author: author.id })
   );
   return (await response.json()) as WPPost[];
 }
 
 export async function getPostsByCategorySlug(
-  categorySlug: string,
+  categorySlug: string
 ): Promise<WPPost[]> {
   const category = await getCategoryBySlug(categorySlug);
   const response = await fetch(
-    getUrl("/wp-json/wp/v2/posts", { categories: category.id }),
+    getUrl("/wp-json/wp/v2/posts", { categories: category.id })
   );
   return (await response.json()) as WPPost[];
 }
@@ -167,7 +167,7 @@ export async function getPostsByCategorySlug(
 export async function getPostsByTagSlug(tagSlug: string): Promise<WPPost[]> {
   const tag = await getTagBySlug(tagSlug);
   const response = await fetch(
-    getUrl("/wp-json/wp/v2/posts", { tags: tag.id }),
+    getUrl("/wp-json/wp/v2/posts", { tags: tag.id })
   );
   return (await response.json()) as WPPost[];
 }
@@ -175,14 +175,14 @@ export async function getPostsByTagSlug(tagSlug: string): Promise<WPPost[]> {
 // Media
 export async function getFeaturedMediaById(
   url: string,
-  id: number,
+  id: number
 ): Promise<WPFeaturedMedia> {
   const response = await fetch(getUrl(`/wp-json/wp/v2/media/${id}`));
   return (await response.json()) as WPFeaturedMedia;
 }
 
 // Woo product taxonomies exposed via WP v2
-function buildTaxonomyQuery(params?: HWCTaxonomyQuery): string {
+function buildTaxonomyQuery(params?: WPTaxonomyQuery): string {
   if (!params) return "";
   const qs = new URLSearchParams();
   const pairs: Array<[string, string | undefined]> = [
@@ -206,57 +206,55 @@ function buildTaxonomyQuery(params?: HWCTaxonomyQuery): string {
 }
 
 export async function getProductCategories(
-  params?: HWCTaxonomyQuery,
-): Promise<HWCProductCategory[]> {
+  params?: WPTaxonomyQuery
+): Promise<WPProductCategory[]> {
   const res = await fetch(
-    getUrl(`/wp-json/wp/v2/product_cat${buildTaxonomyQuery(params)}`),
+    getUrl(`/wp-json/wp/v2/product_cat${buildTaxonomyQuery(params)}`)
   );
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const json = (await res.json()) as unknown;
   if (!Array.isArray(json)) throw new Error("Invalid response format");
-  return json as HWCProductCategory[];
+  return json as WPProductCategory[];
 }
 
 export async function getProductTags(
-  params?: HWCTaxonomyQuery,
-): Promise<HWCProductTag[]> {
+  params?: WPTaxonomyQuery
+): Promise<WPProductTag[]> {
   const res = await fetch(
-    getUrl(`/wp-json/wp/v2/product_tag${buildTaxonomyQuery(params)}`),
+    getUrl(`/wp-json/wp/v2/product_tag${buildTaxonomyQuery(params)}`)
   );
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const json = (await res.json()) as unknown;
   if (!Array.isArray(json)) throw new Error("Invalid response format");
-  return json as HWCProductTag[];
+  return json as WPProductTag[];
 }
 
 export async function getProductCategoryById(
-  id: number,
-): Promise<HWCProductCategory> {
+  id: number
+): Promise<WPProductCategory> {
   const res = await fetch(getUrl(`/wp-json/wp/v2/product_cat/${id}`));
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-  return (await res.json()) as HWCProductCategory;
+  return (await res.json()) as WPProductCategory;
 }
 
 export async function getProductCategoryBySlug(
-  slug: string,
-): Promise<HWCProductCategory> {
+  slug: string
+): Promise<WPProductCategory> {
   const res = await fetch(getUrl(`/wp-json/wp/v2/product_cat`, { slug }));
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-  const list = (await res.json()) as HWCProductCategory[];
+  const list = (await res.json()) as WPProductCategory[];
   return list[0]!;
 }
 
-export async function getProductTagById(id: number): Promise<HWCProductTag> {
+export async function getProductTagById(id: number): Promise<WPProductTag> {
   const res = await fetch(getUrl(`/wp-json/wp/v2/product_tag/${id}`));
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-  return (await res.json()) as HWCProductTag;
+  return (await res.json()) as WPProductTag;
 }
 
-export async function getProductTagBySlug(
-  slug: string,
-): Promise<HWCProductTag> {
+export async function getProductTagBySlug(slug: string): Promise<WPProductTag> {
   const res = await fetch(getUrl(`/wp-json/wp/v2/product_tag`, { slug }));
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-  const list = (await res.json()) as HWCProductTag[];
+  const list = (await res.json()) as WPProductTag[];
   return list[0]!;
 }
