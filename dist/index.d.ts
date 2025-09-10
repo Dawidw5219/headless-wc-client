@@ -1,4 +1,4 @@
-interface HWCTaxonomyTermBase {
+interface WPTaxonomyTermBase {
     id: number;
     name: string;
     slug: string;
@@ -8,16 +8,16 @@ interface HWCTaxonomyTermBase {
     link?: string;
     meta?: any[];
 }
-type WPTerm<TTaxonomy extends string> = HWCTaxonomyTermBase & {
+type WPTerm<TTaxonomy extends string> = WPTaxonomyTermBase & {
     taxonomy: TTaxonomy;
 };
-type HWCProductCategory = HWCTaxonomyTermBase & {
+type WPProductCategory = Omit<WPCategory, "taxonomy"> & {
     taxonomy: "product_cat";
 };
-type HWCProductTag = HWCTaxonomyTermBase & {
+type WPProductTag = Omit<WPTag, "taxonomy"> & {
     taxonomy: "product_tag";
 };
-interface HWCTaxonomyQuery {
+interface WPTaxonomyQuery {
     search?: string;
     page?: number;
     perPage?: number;
@@ -166,12 +166,12 @@ declare function getPostsByAuthorSlug(authorSlug: string): Promise<WPPost[]>;
 declare function getPostsByCategorySlug(categorySlug: string): Promise<WPPost[]>;
 declare function getPostsByTagSlug(tagSlug: string): Promise<WPPost[]>;
 declare function getFeaturedMediaById(url: string, id: number): Promise<WPFeaturedMedia>;
-declare function getProductCategories(params?: HWCTaxonomyQuery): Promise<HWCProductCategory[]>;
-declare function getProductTags(params?: HWCTaxonomyQuery): Promise<HWCProductTag[]>;
-declare function getProductCategoryById(id: number): Promise<HWCProductCategory>;
-declare function getProductCategoryBySlug(slug: string): Promise<HWCProductCategory>;
-declare function getProductTagById(id: number): Promise<HWCProductTag>;
-declare function getProductTagBySlug(slug: string): Promise<HWCProductTag>;
+declare function getProductCategories(params?: WPTaxonomyQuery): Promise<WPProductCategory[]>;
+declare function getProductTags(params?: WPTaxonomyQuery): Promise<WPProductTag[]>;
+declare function getProductCategoryById(id: number): Promise<WPProductCategory>;
+declare function getProductCategoryBySlug(slug: string): Promise<WPProductCategory>;
+declare function getProductTagById(id: number): Promise<WPProductTag>;
+declare function getProductTagBySlug(slug: string): Promise<WPProductTag>;
 
 type HWCAttributeValue = {
     id: string;
@@ -524,4 +524,4 @@ declare function revalidateProducts(): Promise<void>;
 declare function revalidatePages(): Promise<void>;
 declare function revalidateNextjsCache(): Promise<void>;
 
-export { type HWCCart, type HWCCartItem, type HWCCustomerData, type HWCError, type HWCOrder, type HWCOrderDetails, type HWCProduct, type HWCProductCategory, type HWCProductDetailed, type HWCProductTag, type HWCResp, type HWCTaxonomyQuery, addToCart, applyCoupon, changeVariant, createCart, createOrder, getAllAuthors, getAllCategories, getAllPages, getAllPosts, getAllTags, getAuthorById, getAuthorBySlug, getAvailableOptions, getBaseUrl, getCart, getCategoryById, getCategoryBySlug, getFeaturedMediaById, getInitialSelection, getOrderDetails, getPageById, getPageBySlug, getPostById, getPostBySlug, getPostsByAuthor, getPostsByAuthorSlug, getPostsByCategory, getPostsByCategorySlug, getPostsByTag, getPostsByTagSlug, getProduct, getProductCategories, getProductCategoryById, getProductCategoryBySlug, getProductTagById, getProductTagBySlug, getProductTags, getProducts, getTagById, getTagBySlug, getTagsByPost, getVariantMatch, getVariantState, normalizeSelection, removeCoupon, removeFromCart, revalidateCart, revalidateNextjsCache, revalidatePages, revalidateProducts, setWooCommerceUrl, updateCart, updateCartItem, updateSelection };
+export { type HWCCart, type HWCCartItem, type HWCCustomerData, type HWCError, type HWCOrder, type HWCOrderDetails, type HWCProduct, type HWCProductDetailed, type HWCResp, type WPAuthor, type WPCategory, type WPFeaturedMedia, type WPPage, type WPPost, type WPProductCategory, type WPProductTag, type WPTag, type WPTaxonomyQuery, type WPTerm, addToCart, applyCoupon, changeVariant, createCart, createOrder, getAllAuthors, getAllCategories, getAllPages, getAllPosts, getAllTags, getAuthorById, getAuthorBySlug, getAvailableOptions, getBaseUrl, getCart, getCategoryById, getCategoryBySlug, getFeaturedMediaById, getInitialSelection, getOrderDetails, getPageById, getPageBySlug, getPostById, getPostBySlug, getPostsByAuthor, getPostsByAuthorSlug, getPostsByCategory, getPostsByCategorySlug, getPostsByTag, getPostsByTagSlug, getProduct, getProductCategories, getProductCategoryById, getProductCategoryBySlug, getProductTagById, getProductTagBySlug, getProductTags, getProducts, getTagById, getTagBySlug, getTagsByPost, getVariantMatch, getVariantState, normalizeSelection, removeCoupon, removeFromCart, revalidateCart, revalidateNextjsCache, revalidatePages, revalidateProducts, setWooCommerceUrl, updateCart, updateCartItem, updateSelection };
