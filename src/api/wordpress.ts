@@ -1,4 +1,4 @@
-import { getBaseUrl } from "@/core/config";
+import { getBaseUrl } from "@/functions/config";
 import type {
   WPProductCategory,
   WPProductTag,

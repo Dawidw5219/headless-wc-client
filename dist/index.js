@@ -1,9 +1,7 @@
 "use strict";
-var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -17,14 +15,6 @@ var __copyProps = (to, from, except, desc) => {
   }
   return to;
 };
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/index.ts
@@ -77,9 +67,6 @@ __export(src_exports, {
   removeCoupon: () => removeCoupon,
   removeFromCart: () => removeFromCart,
   revalidateCart: () => revalidateCart,
-  revalidateNextjsCache: () => revalidateNextjsCache,
-  revalidatePages: () => revalidatePages,
-  revalidateProducts: () => revalidateProducts,
   setWooCommerceUrl: () => setWooCommerceUrl,
   updateCart: () => updateCart,
   updateCartItem: () => updateCartItem,
@@ -87,7 +74,7 @@ __export(src_exports, {
 });
 module.exports = __toCommonJS(src_exports);
 
-// src/core/config.ts
+// src/functions/config.ts
 var BASE_URL;
 function setWooCommerceUrl(baseUrl) {
   BASE_URL = baseUrl;
@@ -466,7 +453,7 @@ async function getProducts(url, params) {
   return { success: true, data: items };
 }
 
-// src/core/add-to-cart.ts
+// src/functions/add-to-cart.ts
 async function addToCart(cartItems, input) {
   const url = getBaseUrl();
   const item = "id" in input ? { id: input.id, quantity: input.quantity ?? 1 } : { slug: input.slug, quantity: input.quantity ?? 1 };
@@ -482,7 +469,7 @@ async function addToCart(cartItems, input) {
   return res.data;
 }
 
-// src/core/apply-coupon.ts
+// src/functions/apply-coupon.ts
 async function applyCoupon(cartItems, code) {
   const url = getBaseUrl();
   const res = await createCart(
@@ -498,7 +485,7 @@ async function removeCoupon(cartItems) {
   return applyCoupon(cartItems, "");
 }
 
-// src/core/create-order.ts
+// src/functions/create-order.ts
 async function createOrder2(args) {
   const url = getBaseUrl();
   const res = await createOrder(url, args);
@@ -508,7 +495,7 @@ async function createOrder2(args) {
   return res.data;
 }
 
-// src/core/get-cart.ts
+// src/functions/get-cart.ts
 async function getCart(cartItems) {
   const url = getBaseUrl();
   const res = await createCart(
@@ -524,7 +511,7 @@ async function getCart(cartItems) {
 }
 var createCart2 = getCart;
 
-// src/core/get-order-details.ts
+// src/functions/get-order-details.ts
 async function getOrderDetails2(orderId, orderKey) {
   const url = getBaseUrl();
   const res = await getOrderDetails(
@@ -538,7 +525,7 @@ async function getOrderDetails2(orderId, orderKey) {
   return res.data;
 }
 
-// src/core/get-product.ts
+// src/functions/get-product.ts
 async function getProduct2(idOrSlug) {
   const url = getBaseUrl();
   const res = await getProduct(
@@ -551,7 +538,7 @@ async function getProduct2(idOrSlug) {
   return res.data;
 }
 
-// src/core/get-products.ts
+// src/functions/get-products.ts
 async function getProducts2(params) {
   const url = getBaseUrl();
   const res = await getProducts(url, params);
@@ -561,7 +548,7 @@ async function getProducts2(params) {
   return res.data;
 }
 
-// src/core/remove-from-cart.ts
+// src/functions/remove-from-cart.ts
 async function removeFromCart(cartItems, idOrSlug) {
   const url = getBaseUrl();
   const next = cartItems.filter((item) => {
@@ -580,7 +567,7 @@ async function removeFromCart(cartItems, idOrSlug) {
   return res.data;
 }
 
-// src/core/revalidate-cart.ts
+// src/functions/revalidate-cart.ts
 async function revalidateCart(cartItems) {
   const url = getBaseUrl();
   const res = await createCart(
@@ -593,7 +580,7 @@ async function revalidateCart(cartItems) {
   return res.data;
 }
 
-// src/core/update-cart.ts
+// src/functions/update-cart.ts
 async function updateCart(cartItems, changes) {
   const url = getBaseUrl();
   const byId = /* @__PURE__ */ new Map();
@@ -620,7 +607,7 @@ async function updateCart(cartItems, changes) {
   return res.data;
 }
 
-// src/core/update-cart-item.ts
+// src/functions/update-cart-item.ts
 async function updateCartItem(cartItems, change) {
   const url = getBaseUrl();
   const next = cartItems.map((item) => {
@@ -642,7 +629,7 @@ async function updateCartItem(cartItems, change) {
   return res.data;
 }
 
-// src/core/variants-normalize-selection.ts
+// src/functions/variants-normalize-selection.ts
 function canonicalizeKey(key) {
   return key.trim().toLowerCase();
 }
@@ -665,7 +652,7 @@ function normalizeSelection(product, selection) {
   return normalized;
 }
 
-// src/core/variants-getters.ts
+// src/functions/variants-getters.ts
 function getVariantMatch(product, selection) {
   if (product.type !== "variable") return null;
   const normalized = normalizeSelection(product, selection);
@@ -689,7 +676,7 @@ function getInitialSelection(product) {
   };
 }
 
-// src/core/variants-options.ts
+// src/functions/variants-options.ts
 function getAvailableOptions(product, partialSelection) {
   if (product.type !== "variable") return {};
   const normalized = normalizeSelection(product, partialSelection);
@@ -712,7 +699,7 @@ function getAvailableOptions(product, partialSelection) {
   return result;
 }
 
-// src/core/variants-update.ts
+// src/functions/variants-update.ts
 function updateSelection(product, currentSelection, changedName, changedValue) {
   if (product.type !== "variable") {
     return {
@@ -793,39 +780,6 @@ function changeVariant(product, state, name, value) {
   const options = getAvailableOptions(product, selection);
   return { selection, variation, productView, options };
 }
-
-// src/next/index.ts
-async function getNextCache() {
-  try {
-    const mod = await import("next/cache");
-    return {
-      cacheLife: mod.unstable_cacheLife,
-      cacheTag: mod.unstable_cacheTag,
-      revalidateTag: mod.revalidateTag
-    };
-  } catch {
-    return {
-      cacheLife: void 0,
-      cacheTag: void 0,
-      revalidateTag: void 0
-    };
-  }
-}
-async function revalidateProducts() {
-  const { revalidateTag } = await getNextCache();
-  if (revalidateTag) revalidateTag("hwc:products");
-}
-async function revalidatePages() {
-  const { revalidateTag } = await getNextCache();
-  if (revalidateTag) revalidateTag("hwc:pages");
-}
-async function revalidateNextjsCache() {
-  const { revalidateTag } = await getNextCache();
-  if (revalidateTag) {
-    revalidateTag("hwc:products");
-    revalidateTag("hwc:pages");
-  }
-}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   addToCart,
@@ -875,9 +829,6 @@ async function revalidateNextjsCache() {
   removeCoupon,
   removeFromCart,
   revalidateCart,
-  revalidateNextjsCache,
-  revalidatePages,
-  revalidateProducts,
   setWooCommerceUrl,
   updateCart,
   updateCartItem,

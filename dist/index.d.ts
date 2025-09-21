@@ -430,6 +430,7 @@ type HWCSimpleProductDetailed = HWCSimpleProduct & {
         rendered: string;
         plain: string;
     };
+    metaData?: Record<string, string>;
 };
 type HWCVariableProductDetailed = Omit<HWCSimpleProductDetailed, "type"> & {
     type: "variable";
@@ -520,8 +521,4 @@ type HWCError = {
 };
 type HWCResp<T> = HWCData<T> | HWCError;
 
-declare function revalidateProducts(): Promise<void>;
-declare function revalidatePages(): Promise<void>;
-declare function revalidateNextjsCache(): Promise<void>;
-
-export { type HWCCart, type HWCCartItem, type HWCCustomerData, type HWCError, type HWCOrder, type HWCOrderDetails, type HWCProduct, type HWCProductDetailed, type HWCResp, type WPAuthor, type WPCategory, type WPFeaturedMedia, type WPPage, type WPPost, type WPProductCategory, type WPProductTag, type WPTag, type WPTaxonomyQuery, type WPTerm, addToCart, applyCoupon, changeVariant, createCart, createOrder, getAllAuthors, getAllCategories, getAllPages, getAllPosts, getAllTags, getAuthorById, getAuthorBySlug, getAvailableOptions, getBaseUrl, getCart, getCategoryById, getCategoryBySlug, getFeaturedMediaById, getInitialSelection, getOrderDetails, getPageById, getPageBySlug, getPostById, getPostBySlug, getPostsByAuthor, getPostsByAuthorSlug, getPostsByCategory, getPostsByCategorySlug, getPostsByTag, getPostsByTagSlug, getProduct, getProductCategories, getProductCategoryById, getProductCategoryBySlug, getProductTagById, getProductTagBySlug, getProductTags, getProducts, getTagById, getTagBySlug, getTagsByPost, getVariantMatch, getVariantState, normalizeSelection, removeCoupon, removeFromCart, revalidateCart, revalidateNextjsCache, revalidatePages, revalidateProducts, setWooCommerceUrl, updateCart, updateCartItem, updateSelection };
+export { type HWCCart, type HWCCartItem, type HWCCustomerData, type HWCError, type HWCOrder, type HWCOrderDetails, type HWCProduct, type HWCProductDetailed, type HWCResp, type WPAuthor, type WPCategory, type WPFeaturedMedia, type WPPage, type WPPost, type WPProductCategory, type WPProductTag, type WPTag, type WPTaxonomyQuery, type WPTerm, addToCart, applyCoupon, changeVariant, createCart, createOrder, getAllAuthors, getAllCategories, getAllPages, getAllPosts, getAllTags, getAuthorById, getAuthorBySlug, getAvailableOptions, getBaseUrl, getCart, getCategoryById, getCategoryBySlug, getFeaturedMediaById, getInitialSelection, getOrderDetails, getPageById, getPageBySlug, getPostById, getPostBySlug, getPostsByAuthor, getPostsByAuthorSlug, getPostsByCategory, getPostsByCategorySlug, getPostsByTag, getPostsByTagSlug, getProduct, getProductCategories, getProductCategoryById, getProductCategoryBySlug, getProductTagById, getProductTagBySlug, getProductTags, getProducts, getTagById, getTagBySlug, getTagsByPost, getVariantMatch, getVariantState, normalizeSelection, removeCoupon, removeFromCart, revalidateCart, setWooCommerceUrl, updateCart, updateCartItem, updateSelection };
