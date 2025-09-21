@@ -448,6 +448,8 @@ type HWCVariableProductDetailed = Omit<HWCSimpleProductDetailed, "type"> & {
 type HWCProductDetailed = HWCSimpleProductDetailed | HWCVariableProductDetailed;
 
 declare function getProduct(idOrSlug: number | string): Promise<HWCProductDetailed>;
+declare function getProductById(id: number): Promise<HWCProductDetailed>;
+declare function getProductBySlug(slug: string): Promise<HWCProductDetailed>;
 
 type HWCProductQuery = {
     search?: string;
@@ -521,4 +523,4 @@ type HWCError = {
 };
 type HWCResp<T> = HWCData<T> | HWCError;
 
-export { type HWCCart, type HWCCartItem, type HWCCustomerData, type HWCError, type HWCOrder, type HWCOrderDetails, type HWCProduct, type HWCProductDetailed, type HWCResp, type WPAuthor, type WPCategory, type WPFeaturedMedia, type WPPage, type WPPost, type WPProductCategory, type WPProductTag, type WPTag, type WPTaxonomyQuery, type WPTerm, addToCart, applyCoupon, changeVariant, createCart, createOrder, getAllAuthors, getAllCategories, getAllPages, getAllPosts, getAllTags, getAuthorById, getAuthorBySlug, getAvailableOptions, getBaseUrl, getCart, getCategoryById, getCategoryBySlug, getFeaturedMediaById, getInitialSelection, getOrderDetails, getPageById, getPageBySlug, getPostById, getPostBySlug, getPostsByAuthor, getPostsByAuthorSlug, getPostsByCategory, getPostsByCategorySlug, getPostsByTag, getPostsByTagSlug, getProduct, getProductCategories, getProductCategoryById, getProductCategoryBySlug, getProductTagById, getProductTagBySlug, getProductTags, getProducts, getTagById, getTagBySlug, getTagsByPost, getVariantMatch, getVariantState, normalizeSelection, removeCoupon, removeFromCart, revalidateCart, setWooCommerceUrl, updateCart, updateCartItem, updateSelection };
+export { type HWCCart, type HWCCartItem, type HWCCustomerData, type HWCError, type HWCOrder, type HWCOrderDetails, type HWCProduct, type HWCProductDetailed, type HWCResp, type WPAuthor, type WPCategory, type WPFeaturedMedia, type WPPage, type WPPost, type WPProductCategory, type WPProductTag, type WPTag, type WPTaxonomyQuery, type WPTerm, addToCart, applyCoupon, changeVariant, createCart, createOrder, getAllAuthors, getAllCategories, getAllPages, getAllPosts, getAllTags, getAuthorById, getAuthorBySlug, getAvailableOptions, getBaseUrl, getCart, getCategoryById, getCategoryBySlug, getFeaturedMediaById, getInitialSelection, getOrderDetails, getPageById, getPageBySlug, getPostById, getPostBySlug, getPostsByAuthor, getPostsByAuthorSlug, getPostsByCategory, getPostsByCategorySlug, getPostsByTag, getPostsByTagSlug, getProduct, getProductById, getProductBySlug, getProductCategories, getProductCategoryById, getProductCategoryBySlug, getProductTagById, getProductTagBySlug, getProductTags, getProducts, getTagById, getTagBySlug, getTagsByPost, getVariantMatch, getVariantState, normalizeSelection, removeCoupon, removeFromCart, revalidateCart, setWooCommerceUrl, updateCart, updateCartItem, updateSelection };

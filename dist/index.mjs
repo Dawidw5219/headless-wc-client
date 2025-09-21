@@ -461,6 +461,12 @@ async function getProduct2(idOrSlug) {
   }
   return res.data;
 }
+async function getProductById(id) {
+  return getProduct2(id);
+}
+async function getProductBySlug(slug) {
+  return getProduct2(slug);
+}
 
 // src/functions/get-products.ts
 async function getProducts2(params) {
@@ -736,6 +742,8 @@ export {
   getPostsByTag,
   getPostsByTagSlug,
   getProduct2 as getProduct,
+  getProductById,
+  getProductBySlug,
   getProductCategories,
   getProductCategoryById,
   getProductCategoryBySlug,

@@ -51,6 +51,8 @@ __export(src_exports, {
   getPostsByTag: () => getPostsByTag,
   getPostsByTagSlug: () => getPostsByTagSlug,
   getProduct: () => getProduct2,
+  getProductById: () => getProductById,
+  getProductBySlug: () => getProductBySlug,
   getProductCategories: () => getProductCategories,
   getProductCategoryById: () => getProductCategoryById,
   getProductCategoryBySlug: () => getProductCategoryBySlug,
@@ -537,6 +539,12 @@ async function getProduct2(idOrSlug) {
   }
   return res.data;
 }
+async function getProductById(id) {
+  return getProduct2(id);
+}
+async function getProductBySlug(slug) {
+  return getProduct2(slug);
+}
 
 // src/functions/get-products.ts
 async function getProducts2(params) {
@@ -813,6 +821,8 @@ function changeVariant(product, state, name, value) {
   getPostsByTag,
   getPostsByTagSlug,
   getProduct,
+  getProductById,
+  getProductBySlug,
   getProductCategories,
   getProductCategoryById,
   getProductCategoryBySlug,

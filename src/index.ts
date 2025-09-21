@@ -6,7 +6,11 @@ export { getBaseUrl, setWooCommerceUrl } from "./functions/config";
 export { createOrder } from "./functions/create-order";
 export { createCart, getCart } from "./functions/get-cart";
 export { getOrderDetails } from "./functions/get-order-details";
-export { getProduct } from "./functions/get-product";
+export {
+  getProduct,
+  getProductById,
+  getProductBySlug,
+} from "./functions/get-product";
 export { getProducts } from "./functions/get-products";
 export { removeFromCart } from "./functions/remove-from-cart";
 export { revalidateCart } from "./functions/revalidate-cart";
