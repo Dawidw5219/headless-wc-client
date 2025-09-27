@@ -363,6 +363,41 @@ declare function createOrder(args: {
     };
 }): Promise<HWCOrder>;
 
+type HWCCreateUserRequest = {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+    billing: HWCCustomerData;
+    shipping: HWCCustomerData;
+    meta?: {
+        phone_verified?: boolean;
+        accepts_marketing?: boolean;
+        customer_note?: string;
+        [key: string]: any;
+    };
+};
+type HWCCreateUserResponse = {
+    success: true;
+    data: {
+        userId: number;
+        email: string;
+        username: string;
+    };
+    message: string;
+};
+type HWCCreateUserErrorResponse = {
+    success: false;
+    error: {
+        code: string;
+        message: string;
+    };
+};
+type HWCCreateUserResult = HWCCreateUserResponse | HWCCreateUserErrorResponse;
+
+declare function createUser(userData: HWCCreateUserRequest): Promise<HWCCreateUserResult>;
+
 declare function getCart(cartItems: HWCCartItemInput$1[]): Promise<HWCCart>;
 declare const createCart: typeof getCart;
 
@@ -523,4 +558,4 @@ type HWCError = {
 };
 type HWCResp<T> = HWCData<T> | HWCError;
 
-export { type HWCCart, type HWCCartItem, type HWCCustomerData, type HWCError, type HWCOrder, type HWCOrderDetails, type HWCProduct, type HWCProductDetailed, type HWCResp, type WPAuthor, type WPCategory, type WPFeaturedMedia, type WPPage, type WPPost, type WPProductCategory, type WPProductTag, type WPTag, type WPTaxonomyQuery, type WPTerm, addToCart, applyCoupon, changeVariant, createCart, createOrder, getAllAuthors, getAllCategories, getAllPages, getAllPosts, getAllTags, getAuthorById, getAuthorBySlug, getAvailableOptions, getBaseUrl, getCart, getCategoryById, getCategoryBySlug, getFeaturedMediaById, getInitialSelection, getOrderDetails, getPageById, getPageBySlug, getPostById, getPostBySlug, getPostsByAuthor, getPostsByAuthorSlug, getPostsByCategory, getPostsByCategorySlug, getPostsByTag, getPostsByTagSlug, getProduct, getProductById, getProductBySlug, getProductCategories, getProductCategoryById, getProductCategoryBySlug, getProductTagById, getProductTagBySlug, getProductTags, getProducts, getTagById, getTagBySlug, getTagsByPost, getVariantMatch, getVariantState, normalizeSelection, removeCoupon, removeFromCart, revalidateCart, setWooCommerceUrl, updateCart, updateCartItem, updateSelection };
+export { type HWCCart, type HWCCartItem, type HWCCreateUserErrorResponse, type HWCCreateUserRequest, type HWCCreateUserResponse, type HWCCreateUserResult, type HWCCustomerData, type HWCError, type HWCOrder, type HWCOrderDetails, type HWCProduct, type HWCProductDetailed, type HWCResp, type WPAuthor, type WPCategory, type WPFeaturedMedia, type WPPage, type WPPost, type WPProductCategory, type WPProductTag, type WPTag, type WPTaxonomyQuery, type WPTerm, addToCart, applyCoupon, changeVariant, createCart, createOrder, createUser, getAllAuthors, getAllCategories, getAllPages, getAllPosts, getAllTags, getAuthorById, getAuthorBySlug, getAvailableOptions, getBaseUrl, getCart, getCategoryById, getCategoryBySlug, getFeaturedMediaById, getInitialSelection, getOrderDetails, getPageById, getPageBySlug, getPostById, getPostBySlug, getPostsByAuthor, getPostsByAuthorSlug, getPostsByCategory, getPostsByCategorySlug, getPostsByTag, getPostsByTagSlug, getProduct, getProductById, getProductBySlug, getProductCategories, getProductCategoryById, getProductCategoryBySlug, getProductTagById, getProductTagBySlug, getProductTags, getProducts, getTagById, getTagBySlug, getTagsByPost, getVariantMatch, getVariantState, normalizeSelection, removeCoupon, removeFromCart, revalidateCart, setWooCommerceUrl, updateCart, updateCartItem, updateSelection };

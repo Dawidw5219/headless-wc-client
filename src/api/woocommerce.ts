@@ -6,6 +6,7 @@ import type { HWCProduct } from "../types/product";
 import type { HWCProductDetailed } from "../types/product-detailed";
 import type { HWCProductQuery } from "../types/product-query";
 import type { HWCError, HWCResp } from "../types/response";
+import type { HWCCreateUserRequest, HWCCreateUserResult } from "../types/user";
 import { betterFetch } from "../utils/better-fetch";
 
 export async function createCart(
@@ -15,7 +16,7 @@ export async function createCart(
     | { slug: string; quantity: number }
   )[],
   couponCode: string = "",
-  customFields?: { [key: string]: any },
+  customFields?: { [key: string]: any }
 ): Promise<HWCResp<HWCCart>> {
   const res = await betterFetch(`${url}/wp-json/headless-wc/v1/cart`, {
     method: "POST",
@@ -43,7 +44,7 @@ export async function createOrder(
     paymentMethodId?: string;
     redirectURL?: string;
     customFields?: { [key: string]: any };
-  },
+  }
 ): Promise<HWCResp<HWCOrder>> {
   const res = await betterFetch(`${url}/wp-json/headless-wc/v1/order`, {
     method: "POST",
@@ -78,12 +79,12 @@ export async function createOrder(
 export async function getOrderDetails(
   url: string,
   orderId: number,
-  orderKey: string,
+  orderKey: string
 ): Promise<HWCResp<HWCOrderDetails>> {
   const res = await betterFetch(
     `${url}/wp-json/headless-wc/v1/order/${orderId}?key=${encodeURIComponent(
-      orderKey,
-    )}`,
+      orderKey
+    )}`
   );
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const json = await res.json();
@@ -93,10 +94,10 @@ export async function getOrderDetails(
 
 export async function getProduct(
   url: string,
-  idOrSlug: number | string,
+  idOrSlug: number | string
 ): Promise<HWCResp<HWCProductDetailed>> {
   const res = await betterFetch(
-    `${url}/wp-json/headless-wc/v1/products/${idOrSlug}`,
+    `${url}/wp-json/headless-wc/v1/products/${idOrSlug}`
   );
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const json = await res.json();
@@ -128,7 +129,7 @@ function buildProductsUrl(url: string, params?: HWCProductQuery): string {
 
 export async function getProducts(
   url: string,
-  params?: HWCProductQuery,
+  params?: HWCProductQuery
 ): Promise<HWCResp<HWCProduct[]>> {
   const res = await betterFetch(buildProductsUrl(url, params));
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -140,4 +141,19 @@ export async function getProducts(
     ? ((json as any).data as HWCProduct[])
     : [];
   return { success: true, data: items };
+}
+
+export async function createUser(
+  url: string,
+  userData: HWCCreateUserRequest
+): Promise<HWCResp<HWCCreateUserResult>> {
+  const res = await betterFetch(`${url}/wp-json/headless-wc/v1/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userData),
+  });
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const json = await res.json();
+  if (json.success === false) return json as HWCError;
+  return { success: true, data: json as HWCCreateUserResult };
 }

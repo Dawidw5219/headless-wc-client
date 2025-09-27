@@ -376,6 +376,17 @@ async function getProducts(url, params) {
   const items = Array.isArray(json.data) ? json.data : [];
   return { success: true, data: items };
 }
+async function createUser(url, userData) {
+  const res = await betterFetch(`${url}/wp-json/headless-wc/v1/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userData)
+  });
+  if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const json = await res.json();
+  if (json.success === false) return json;
+  return { success: true, data: json };
+}
 
 // src/functions/add-to-cart.ts
 async function addToCart(cartItems, input) {
@@ -413,6 +424,19 @@ async function removeCoupon(cartItems) {
 async function createOrder2(args) {
   const url = getBaseUrl();
   const res = await createOrder(url, args);
+  if (res.success === false) {
+    throw new Error(res.message);
+  }
+  return res.data;
+}
+
+// src/functions/create-user.ts
+async function createUser2(userData) {
+  const url = getBaseUrl();
+  const res = await createUser(
+    url,
+    userData
+  );
   if (res.success === false) {
     throw new Error(res.message);
   }
@@ -716,6 +740,7 @@ export {
   changeVariant,
   createCart2 as createCart,
   createOrder2 as createOrder,
+  createUser2 as createUser,
   getAllAuthors,
   getAllCategories,
   getAllPages,
