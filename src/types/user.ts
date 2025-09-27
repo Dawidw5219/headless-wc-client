@@ -7,7 +7,7 @@ export type HWCCreateUserRequest = {
   lastName: string;
   username: string;
   billing: HWCCustomerData;
-  shipping: HWCCustomerData;
+  shipping?: HWCCustomerData;
   meta?: {
     phone_verified?: boolean;
     accepts_marketing?: boolean;

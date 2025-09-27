@@ -38,37 +38,33 @@ export async function createOrder(
       | { slug: string; quantity: number }
     )[];
     couponCode?: string;
-    billingData: HWCCustomerData;
-    shippingData?: HWCCustomerData;
+    billing: HWCCustomerData;
+    shipping?: HWCCustomerData;
     shippingMethodId?: string;
     paymentMethodId?: string;
     redirectURL?: string;
-    customFields?: { [key: string]: any };
+    meta?: { [key: string]: any };
   }
 ): Promise<HWCResp<HWCOrder>> {
   const res = await betterFetch(`${url}/wp-json/headless-wc/v1/order`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      cart: props.cartItems,
-      couponCode: props.couponCode ?? "",
-      shippingMethodId: props.shippingMethodId,
-      paymentMethodId: props.paymentMethodId,
-      redirectUrl: props.redirectURL ?? "",
-      useDifferentShipping: false,
-      billingFirstName: props.billingData.firstName,
-      billingLastName: props.billingData.lastName,
-      billingAddress1: props.billingData.address1,
-      billingAddress2: props.billingData.address2 ?? "",
-      billingCity: props.billingData.city,
-      billingState: props.billingData.state,
-      billingPostcode: props.billingData.postcode,
-      billingCountry: props.billingData.country,
-      billingPhone: props.billingData.phone,
-      billingEmail: props.billingData.email,
-      billingCompany: props.billingData.company,
-      customFields: props.customFields,
-    }),
+    body: JSON.stringify(
+      (() => {
+        const payload: any = {
+          cart: props.cartItems,
+          couponCode: props.couponCode ?? "",
+          shippingMethodId: props.shippingMethodId,
+          paymentMethodId: props.paymentMethodId,
+          redirectUrl: props.redirectURL ?? "",
+          useDifferentShipping: Boolean(props.shipping),
+          billing: props.billing,
+          meta: props.meta,
+        };
+        if (props.shipping) payload.shipping = props.shipping;
+        return payload;
+      })()
+    ),
   });
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const json = await res.json();
@@ -150,7 +146,13 @@ export async function createUser(
   const res = await betterFetch(`${url}/wp-json/headless-wc/v1/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(userData),
+    body: JSON.stringify(
+      (() => {
+        const payload: any = { ...userData };
+        if (!userData.shipping) delete payload.shipping;
+        return payload;
+      })()
+    ),
   });
   if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const json = await res.json();

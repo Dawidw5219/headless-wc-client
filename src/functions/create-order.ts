@@ -10,12 +10,12 @@ export async function createOrder(args: {
     | { slug: string; quantity: number }
   )[];
   couponCode?: string;
-  billingData: HWCCustomerData;
-  shippingData?: HWCCustomerData;
+  billing: HWCCustomerData;
+  shipping?: HWCCustomerData;
   shippingMethodId?: string;
   paymentMethodId?: string;
   redirectURL?: string;
-  customFields?: { [key: string]: any };
+  meta?: { [key: string]: any };
 }): Promise<HWCOrder> {
   const url = getBaseUrl();
   const res = (await apiCreateOrder(url, args)) as HWCResp<HWCOrder>;

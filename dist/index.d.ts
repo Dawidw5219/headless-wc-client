@@ -353,12 +353,12 @@ declare function createOrder(args: {
         quantity: number;
     })[];
     couponCode?: string;
-    billingData: HWCCustomerData;
-    shippingData?: HWCCustomerData;
+    billing: HWCCustomerData;
+    shipping?: HWCCustomerData;
     shippingMethodId?: string;
     paymentMethodId?: string;
     redirectURL?: string;
-    customFields?: {
+    meta?: {
         [key: string]: any;
     };
 }): Promise<HWCOrder>;
@@ -370,7 +370,7 @@ type HWCCreateUserRequest = {
     lastName: string;
     username: string;
     billing: HWCCustomerData;
-    shipping: HWCCustomerData;
+    shipping?: HWCCustomerData;
     meta?: {
         phone_verified?: boolean;
         accepts_marketing?: boolean;
@@ -465,7 +465,7 @@ type HWCSimpleProductDetailed = HWCSimpleProduct & {
         rendered: string;
         plain: string;
     };
-    metaData?: Record<string, string>;
+    meta?: Record<string, string>;
 };
 type HWCVariableProductDetailed = Omit<HWCSimpleProductDetailed, "type"> & {
     type: "variable";

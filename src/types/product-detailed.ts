@@ -15,7 +15,7 @@ type HWCSimpleProductDetailed = HWCSimpleProduct & {
     rendered: string;
     plain: string;
   };
-  metaData?: Record<string, string>;
+  meta?: Record<string, string>;
 };
 
 type HWCVariableProductDetailed = Omit<HWCSimpleProductDetailed, "type"> & {
